@@ -11,7 +11,7 @@ use Digest::SHA qw(sha256_base64);
 use DBI;
 use CGI;
 
-my $dbfile = "./state.sqlite";
+my $dbfile = "../var/state.sqlite";
 
 sub oops($)
 {

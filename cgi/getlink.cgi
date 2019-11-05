@@ -12,7 +12,7 @@ print "Running on $host";
 
 # database lives here
 # CREATE TABLE proxy ( alias text not null, alias_compare_hash text not null, created timestamp default current_timestamp, dsthost text, dstport integer, dstpath text, state text not null);
-my $dbfile = "./state.sqlite";
+my $dbfile = "../var/state.sqlite";
 
 # well, we can't assume there's a usable random library, so let's use
 # /dev/urandom. 16 bytes (128 bits) should be enough.
@@ -24,7 +24,7 @@ my @noncelist;
 my $tries = 0;
 do
 {
-    my $tword = lc(`shuf --random-source=/dev/urandom -n 1 words`);
+    my $tword = lc(`shuf --random-source=/dev/urandom -n 1 ../var/words`);
     chomp $tword;
     if ( $tword =~ /^[a-z0-9]+$/ )
     {
