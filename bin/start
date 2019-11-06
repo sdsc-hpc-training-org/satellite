@@ -1,0 +1,19 @@
+#!/bin/bash
+# start
+# start httpd, presumably as the user executing this script, rather
+# than via systemd/sysvinit.
+
+pushd $( dirname $0 ) 1>/dev/null
+BASEDIR=$( pwd ) 
+popd 1>/dev/null
+
+cd $BASEDIR
+
+PIDFILE=$(./getpidfile)
+
+# need for rh scl
+source scl_source enable httpd24
+
+PIDFILE=${PIDFILE} httpd -f ${BASEDIR}/../httpd-conf/httpd-redirect.conf
+
+
