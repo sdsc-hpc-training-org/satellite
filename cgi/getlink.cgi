@@ -3,7 +3,8 @@
 use strict;
 use Digest::SHA qw(sha256_base64);
 use DBI;
-
+use lib '../etc/';
+use satconfig;
 
 print "Content-type: text/plain\n\n";
 
@@ -11,8 +12,8 @@ my $host = `hostname -f`;
 print "Running on $host";
 
 # database lives here
-# CREATE TABLE proxy ( alias text not null, alias_compare_hash text not null, created timestamp default current_timestamp, dsthost text, dstport integer, dstpath text, state text not null);
-my $dbfile = "../var/state.sqlite";
+# CREATE TABLE proxy ( alias text not null, alias_compare_hash text not null, modified timestamp default current_timestamp, dsthost text, dstport integer, dstpath text, state text not null);
+my $dbfile = $satconfig::dbfile;
 
 # well, we can't assume there's a usable random library, so let's use
 # /dev/urandom. 16 bytes (128 bits) should be enough.

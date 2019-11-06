@@ -10,8 +10,10 @@ use strict;
 use Digest::SHA qw(sha256_base64);
 use DBI;
 use CGI;
+use lib '../etc/';
+use satconfig;
 
-my $dbfile = "../var/state.sqlite";
+my $dbfile = $satconfig::dbfile;
 
 sub oops($)
 {
@@ -33,7 +35,7 @@ oops("Missing 'token' parameter") unless $nonce;
 # and the port
 my $port = $cgi->param('port');
 oops("Missing 'port' parameter") unless $port;
-oops("'port' parameter isn't an integer between 1024 and 65535") unless ( $port =~ /^[0-9]{1,5}$/ && $port > 1023 && $port < 65536);
+oops("'port' parameter isn't an integer between 1024 and 65535") unless ( $port =~ /^[0-9]{4,5}$/ && $port > 1023 && $port < 65536);
 
 # and the server's IP
 # (it's the host requesting this cgi)
@@ -53,7 +55,7 @@ my $sth = $dbh->prepare("select alias from proxy where alias_compare_hash = ? an
 $sth->execute($nonce_hash);
 my @row = $sth->fetchrow_array;
 oops("Unknown nonce or nonce already used") unless( $row[0] eq $nonce && ! $sth->fetchrow_array );
-my $sth = $dbh->prepare("update proxy set dsthost=?, dstport=?, dstpath='/', state='mapped' where alias_compare_hash = ?");
+my $sth = $dbh->prepare("update proxy set dsthost=?, dstport=?, dstpath='/', state='mapped', modified = current_timestamp where alias_compare_hash = ?");
 $sth->execute($srvip, $port, $nonce_hash);
 $dbh->commit;
 

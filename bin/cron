@@ -1,0 +1,87 @@
+#!/usr/bin/perl
+# cron
+# run this via cron from an account that can write the httpd config stub
+
+use strict;
+use lib('../etc');
+use satconfig;
+use DBI;
+use Digest::SHA qw(sha256_hex);
+
+# this will turn into a series of vhost entries
+my $template = <<_VHOST_BODY_;
+<VirtualHost *:_LISTENPORT_>
+    ServerName _ALIAS_._EXTBASENAME_:_EXTPORT_
+    ProxyPass "/" "http://_DSTHOST_:_DSTPORT_/"
+    ProxyPassReverse "/" "http://_DSTHOST_:_DSTPORT_/"
+</Virtualhost>
+_VHOST_BODY_
+
+my $dbfile = $satconfig::dbfile;
+my $listenport = $satconfig::listenport;
+my $extport = $satconfig::extport;
+my $extbasename = $satconfig::extbasename;
+my $httpdstubfile = $satconfig::httpdstubfile;
+
+# get httpd's pid
+open(my $pidfileh, '<', $satconfig::pidfile) or die("Unable to read httpd pid file: $satconfig::pidfile: $!");
+my $httpdpid = do { local $/; <$pidfileh> };
+close($pidfileh);
+chomp $httpdpid;
+
+
+# connect to the db since that's the remainder of what we do.
+our $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+  AutoCommit => 0,
+  RaiseError => 1,
+});
+
+# output is an array to be joined later.
+my @output;
+
+# clear out old junk
+my $mincreate = time() - $satconfig::ttl_secs;
+my $sth = $dbh->prepare("delete from proxy where modified < datetime(?,'unixepoch')");
+$sth->execute($mincreate);
+my $sth = $dbh->prepare("select alias, dsthost, dstport from proxy where state = 'mapped' order by alias asc");
+$sth->execute();
+$dbh->commit;
+while (my @row = $sth->fetchrow)
+{
+    my $alias = $row[0];
+    my $dsthost = $row[1];
+    my $dstport = $row[2];
+
+    # quietly skip entries with crap
+    next unless ( $alias =~ /^[_a-zA-Z0-9]+$/ );
+    next unless ( $dsthost =~ /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/ );
+    next unless ( $dstport =~ /^[0-9]{4,5}$/ );
+    next unless ( $dstport > 1023 && $dstport < 65536 );
+
+    my $tmpblock = $template;
+    $tmpblock =~ s/_LISTENPORT_/$listenport/g;
+    $tmpblock =~ s/_EXTPORT_/$extport/g;
+    $tmpblock =~ s/_EXTBASENAME_/$extbasename/g;
+    $tmpblock =~ s/_ALIAS_/$alias/g;
+    $tmpblock =~ s/_DSTHOST_/$dsthost/g;
+    $tmpblock =~ s/_DSTPORT_/$dstport/g;
+    unshift(@output, $tmpblock);
+}
+
+my $newbody = join("\n", @output);
+my $newbodyhash = sha256_hex($newbody);
+
+# get the current body hash to see if any changes need to be made.
+my $sha = Digest::SHA->new(256);
+$sha->addfile($httpdstubfile);
+my $currentbodyhash = $sha->hexdigest;
+
+# update if different.
+if ( lc($newbodyhash) ne lc($currentbodyhash) )
+{
+    open(my $ofh, ">", $httpdstubfile) or die("Can't write to $httpdstubfile: $!");
+    print $ofh ($newbody);
+    close($ofh);
+    kill 'USR1', $httpdpid;
+}
+
