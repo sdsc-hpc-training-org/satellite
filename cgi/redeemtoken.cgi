@@ -12,6 +12,7 @@ use DBI;
 use CGI;
 use lib '../etc/';
 use satconfig;
+use Net::IP;
 
 my $dbfile = $satconfig::dbfile;
 
@@ -40,6 +41,11 @@ oops("'port' parameter isn't an integer between 1024 and 65535") unless ( $port 
 # and the server's IP
 # (it's the host requesting this cgi)
 my $srvip = $ENV{'REMOTE_ADDR'};
+
+# check server's IP to make sure we allow it
+# don't want to revproxy just anything.
+my $ipf = new Net::IP($satconfig::tgtipmask);
+oops("Client (your) IP not in range $satconfig::tgtipmask, please try from the compute node running your service.") unless $ipf->overlaps(new Net::IP($srvip)) == $IP_B_IN_A_OVERLAP;
 
 # great, update the database.
 # remember not to match on the nonce directly.

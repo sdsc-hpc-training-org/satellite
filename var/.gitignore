@@ -1,1 +1,3 @@
 *.sqlite
+proxyconf.conf
+pidfile

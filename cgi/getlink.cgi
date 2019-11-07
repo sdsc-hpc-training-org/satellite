@@ -5,11 +5,22 @@ use Digest::SHA qw(sha256_base64);
 use DBI;
 use lib '../etc/';
 use satconfig;
+use Net::IP;
 
-print "Content-type: text/plain\n\n";
 
-my $host = `hostname -f`;
-print "Running on $host";
+sub oops($)
+{
+  my $msg = shift;
+  print "Content-type: text/plain\n\n";
+  printf "Oops! %s\n", $msg;
+  $main::dbh->rollback if defined $main::dbh;
+  exit;
+}
+
+# stop and check remote IP here. Don't issue tokens to just anyone.
+my $srvip = $ENV{'REMOTE_ADDR'};
+my $ipf = new Net::IP($satconfig::tgtipmask);
+oops("Client (your) IP not in range $satconfig::tgtipmask, please try from within the cluster.") unless $ipf->overlaps(new Net::IP($srvip)) == $IP_B_IN_A_OVERLAP;
 
 # database lives here
 # CREATE TABLE proxy ( alias text not null, alias_compare_hash text not null, modified timestamp default current_timestamp, dsthost text, dstport integer, dstpath text, state text not null);
@@ -34,11 +45,11 @@ do
     $tries++;
     if ( $tries > 1000 )
     {
-        print "Problem generating unique URL. Sorry!\n";
+        oops("Problem generating unique URL. Sorry!");
         exit;
     }
 } while ( scalar @noncelist < 3 );
-my $nonce = join('_', @noncelist);
+my $nonce = join('-', @noncelist);
 
 # we calc a hash since this is the thing we use to dig out
 # the record later. don't compare on alias since it allows an
@@ -57,4 +68,5 @@ $dbh->commit;
 
 
 
+print "Content-type: text/plain\n\n";
 print "Your token is $nonce";

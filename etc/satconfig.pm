@@ -1,12 +1,21 @@
 use strict;
-package satconfig;
+use Cwd;
+use File::Basename qw(dirname); 
 
+my $basename = dirname(Cwd::abs_path($0));
+
+package satconfig;
 # pid file for httpd. super important since we use the pid in here to 
 # control httpd.
-our $pidfile = '/var/tmp/pidfile';
+our $pidfile = $basename . '/../var/pidfile';
 
 # location of the database file
-our $dbfile = '../var/state.sqlite';
+our $dbfile = $basename . '/../var/state.sqlite';
+
+# allowed subnet for reverse-proxy targets
+# format: subnet/mask
+#our $tgtipmask = '10.21.0.0/16';
+our $tgtipmask = '132.249.121.0/27';
 
 # number of secs an entry can remain in 'pending' or 'mapped' state
 # 'modified' field is updated when moving from pending to mapped.
@@ -18,13 +27,13 @@ our $ttl_secs = 600;
 our $extport = 4080;
 
 # the name users put in their clients
-our $extbasename = 'plinky.sdsc.edu';
+our $extbasename = 'comet-user-content.sdsc.edu';
 
 # the port apache binds to
 our $listenport = 4080;
 
 # the stub file for the apache config
 # it's dynamically updated by bin/cron script
-our $httpdstubfile = '/var/tmp/proxyconf.conf';
+our $httpdstubfile = $basename . '/../var/proxyconf.conf';
 
 1;

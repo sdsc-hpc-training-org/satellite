@@ -12,7 +12,11 @@ cd $BASEDIR
 PIDFILE=$(./getpidfile)
 
 # need for rh scl
-source scl_source enable httpd24
+#source scl_source enable httpd24
+
+if [[ ! -f ${BASEDIR}/../var/proxyconf.conf ]]; then
+  touch ${BASEDIR}/../var/proxyconf.conf
+fi
 
 BASEDIR=${BASEDIR} PIDFILE=${PIDFILE} httpd -f ${BASEDIR}/../httpd-conf/httpd-redirect.conf
 

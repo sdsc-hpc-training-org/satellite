@@ -53,7 +53,7 @@ while (my @row = $sth->fetchrow)
     my $dstport = $row[2];
 
     # quietly skip entries with crap
-    next unless ( $alias =~ /^[_a-zA-Z0-9]+$/ );
+    next unless ( $alias =~ /^[-a-zA-Z0-9]+$/ );
     next unless ( $dsthost =~ /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/ );
     next unless ( $dstport =~ /^[0-9]{4,5}$/ );
     next unless ( $dstport > 1023 && $dstport < 65536 );
@@ -82,6 +82,6 @@ if ( lc($newbodyhash) ne lc($currentbodyhash) )
     open(my $ofh, ">", $httpdstubfile) or die("Can't write to $httpdstubfile: $!");
     print $ofh ($newbody);
     close($ofh);
-    kill 'USR1', $httpdpid;
+    system("sudo -u apache kill -USR1 $httpdpid");
 }
 
