@@ -69,4 +69,4 @@ $dbh->commit;
 
 
 print "Content-type: text/plain\n\n";
-print "Your token is $nonce";
+print "Your token is \n$nonce\n";

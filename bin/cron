@@ -7,10 +7,22 @@ use lib('../etc');
 use satconfig;
 use DBI;
 use Digest::SHA qw(sha256_hex);
+use File::Basename qw(dirname); 
+
+my $basename = dirname(Cwd::abs_path($0));
+chdir $basename;
 
 # this will turn into a series of vhost entries
 my $template = <<_VHOST_BODY_;
 <VirtualHost *:_LISTENPORT_>
+    SSLEngine on
+    SSLProtocol all -SSLv2 -SSLv3 -TLSv1
+    SSLCipherSuite DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDH-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:TLS_DHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:DHE-RSA-AES256-SHA
+
+    SSLCertificateFile /var/secrets/comet-user-content.sdsc.edu.pem
+    SSLCertificateKeyFile /var/secrets/comet-user-content.sdsc.edu.privkey
+    SSLCertificateChainFile /var/secrets/incommon-interm.pem
+
     ServerName _ALIAS_._EXTBASENAME_:_EXTPORT_
     ProxyPass "/" "http://_DSTHOST_:_DSTPORT_/"
     ProxyPassReverse "/" "http://_DSTHOST_:_DSTPORT_/"
@@ -82,6 +94,6 @@ if ( lc($newbodyhash) ne lc($currentbodyhash) )
     open(my $ofh, ">", $httpdstubfile) or die("Can't write to $httpdstubfile: $!");
     print $ofh ($newbody);
     close($ofh);
-    system("sudo -u apache kill -USR1 $httpdpid");
+    system("sudo killall -USR1 httpd");
 }
 

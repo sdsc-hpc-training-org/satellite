@@ -1,1 +1,0 @@
-../cgi/redeemtoken.cgi
