@@ -41,10 +41,12 @@ my $extbasename = $satconfig::extbasename;
 my $httpdstubfile = $satconfig::httpdstubfile;
 
 # get httpd's pid
-open(my $pidfileh, '<', $satconfig::pidfile) or die("Unable to read httpd pid file: $satconfig::pidfile: $!");
-my $httpdpid = do { local $/; <$pidfileh> };
-close($pidfileh);
-chomp $httpdpid;
+# use killall instead since httpdpid might contain junk
+#open(my $pidfileh, '<', $satconfig::pidfile) or die("Unable to read httpd pid file: $satconfig::pidfile: $!");
+#my $httpdpid = do { local $/; <$pidfileh> };
+#close($pidfileh);
+#chomp $httpdpid;
+
 
 
 # connect to the db since that's the remainder of what we do.
