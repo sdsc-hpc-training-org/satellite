@@ -24,6 +24,11 @@ my $template = <<_VHOST_BODY_;
     SSLCertificateChainFile /var/secrets/incommon-interm.pem
 
     ServerName _ALIAS_._EXTBASENAME_:_EXTPORT_
+    RewriteEngine on
+    RewriteCond %{HTTP:Upgrade} websocket [NC]
+    RewriteCond %{HTTP:Connection} upgrade [NC]
+    RewriteRule .* "ws://_DSTHOST_:_DSTPORT_%{REQUEST_URI}" [P]
+
     ProxyPass "/" "http://_DSTHOST_:_DSTPORT_/"
     ProxyPassReverse "/" "http://_DSTHOST_:_DSTPORT_/"
 </Virtualhost>
