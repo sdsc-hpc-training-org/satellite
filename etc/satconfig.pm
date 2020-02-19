@@ -20,7 +20,8 @@ our $tgtipmask = '10.21.0.0/16';
 # number of secs an entry can remain in 'pending' or 'mapped' state
 # 'modified' field is updated when moving from pending to mapped.
 # comet has a max runtime of 48h
-our $ttl_secs = 600;
+# set max to 49h in case job sat in queue a little long.
+our $ttl_secs = 176400;
 
 # the externally-facing port requests come in to
 # usually the same as listenport unless DNAT is in play.
