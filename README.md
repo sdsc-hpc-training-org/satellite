@@ -1,10 +1,15 @@
-=Satellite: A Jypyter Notebook Proxy=
+# Satellite: A Jypyter Notebook Proxy
 
-== Notes ==
+## Notes
 These cgi scripts and configuration are intended to work with
 a standard centos 7 httpd installation.
 
-== Config ==
+The bundled word list comes from the eff_large_wordlist:
+https://www.eff.org/deeplinks/2016/07/new-wordlists-random-passphrases
+
+Don't use /usr/share/dict/words, as users may receive urls with offensive words in them.
+
+## Config 
 Deploy the httpd-conf/*.conf files in /etc/httpd/conf.d/ and 
 remove /etc/httpd/conf.d/ssl.conf.
 
@@ -32,24 +37,24 @@ Examine the httpd config files similarly.
 You will need a wildcard cert for extbasename, put it in /var/secrets.
 The 00-ssl.conf file will point to this cert.
 
-== Accounts ==
+## Accounts
 In addition to the apache account, you'll need an account to run a cron job.
 That account should be added to the apache group.
 
-== Cron ==
+## Cron
 Run bin/cron every minute as the aformentioned account.  This will update the
 dynconf/proxyconf.conf file and graceful-restart apache with sudo.
 
-== Sudo ==
+## Sudo
 You'll need a sudoers line like this:
 ssakai  ALL=(root) NOPASSWD: /usr/bin/killall -USR1 httpd
 
 
-== SELinux ==
+## SELinux
 This has been tested with SELinux in enforcing mode with targeted policy.
 You'll need to make some adjustments to permissions and labeling.
 
-# find satellite -exec ls -ladZ '{}' \;
+` find satellite -exec ls -ladZ '{}' \;
 drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 satellite
 drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 satellite/html
 drwxrwsr-x. root apache system_u:object_r:httpd_sys_rw_content_t:s0 satellite/var
@@ -65,5 +70,5 @@ drwxrwxr-x. root ssakai unconfined_u:object_r:httpd_sys_content_t:s0 satellite/d
 -rw-rw-r--. ssakai ssakai unconfined_u:object_r:httpd_sys_content_t:s0 satellite/dynconf/proxyconf.conf
 drwxr-xr-x. root root unconfined_u:object_r:httpd_sys_content_t:s0 satellite/etc
 -rw-r--r--. root root unconfined_u:object_r:httpd_sys_content_t:s0 satellite/etc/satconfig.pm
-#
+`
 
