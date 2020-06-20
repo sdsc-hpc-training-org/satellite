@@ -14,8 +14,7 @@ our $dbfile = $basename . '/../var/state.sqlite';
 
 # allowed subnet for reverse-proxy targets
 # format: subnet/mask
-our $tgtipmask = '10.21.0.0/16';
-#our $tgtipmask = '132.249.121.0/27';
+our $tgtipmask = '10.1.0.0/16';
 
 # number of secs an entry can remain in 'pending' or 'mapped' state
 # 'modified' field is updated when moving from pending to mapped.

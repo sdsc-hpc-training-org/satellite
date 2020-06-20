@@ -9,13 +9,17 @@ https://www.eff.org/deeplinks/2016/07/new-wordlists-random-passphrases
 
 Don't use /usr/share/dict/words, as users may receive urls with offensive words in them.
 
+Non-Default Packages:
+  perl-Net-IP
+  
 ## Config 
 Deploy the httpd-conf/*.conf files in /etc/httpd/conf.d/ and 
 remove /etc/httpd/conf.d/ssl.conf.
 
 You'll need to create
-  /var/www/satellite
+`  /var/www/satellite `
 which has this structure:
+```
   satellite
   satellite/html
   satellite/var
@@ -31,6 +35,7 @@ which has this structure:
   satellite/dynconf/proxyconf.conf
   satellite/etc
   satellite/etc/satconfig.pm
+```
 
 Examine satellite/etc/satconfig.pm, with careful attention to extbasename.
 Examine the httpd config files similarly.
