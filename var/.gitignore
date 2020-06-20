@@ -1,4 +1,3 @@
 *.sqlite
 proxyconf.conf
 pidfile
-words
