@@ -13,8 +13,8 @@ Non-Default Packages:
   perl-Net-IP
   
 ## Config 
-Deploy the httpd-conf/*.conf files in /etc/httpd/conf.d/ and 
-remove /etc/httpd/conf.d/ssl.conf.
+Deploy the httpd-conf/httpd.conf file in /etc/httpd/conf/
+It will override existing httpd configs.
 
 You'll need to create
 `  /var/www/satellite `
@@ -40,19 +40,34 @@ which has this structure:
 Examine satellite/etc/satconfig.pm, with careful attention to extbasename.
 Examine the httpd config files similarly.
 You will need a wildcard cert for extbasename, put it in /var/secrets.
-The 00-ssl.conf file will point to this cert.
+The ssl section of httpd.conf file will point to this cert.
 
-## Accounts
-In addition to the apache account, you'll need an account to run a cron job.
-That account should be added to the apache group.
+
+## State
+Ensure that satellite/var is accessible by the web server and nobody else.
+Ensure that satellite/var is writable by the web server and nobody else.
+`chown root:apache var`
+`chmod 2770 var`
+
+Create the sqlite db as follows:
+```echo 'CREATE TABLE proxy ( alias text not null, alias_compare_hash text not null, modified timestamp default current_timestamp, dsthost text, dstport integer, dstpath text, state text not null);' | sudo sqlite3 satellite/var/state.sqlite
+chown apache:apache satellite/var/state.sqlite
+chown 0600 satellete/var/state.sqlie
+```
+
+Ensure that satellite/dynconf is accessible by root and nobody else.
+It will contain soft-secrets (the urls for notebooks)
+`chown root:root dynconf`
+`chmod 0700 dynconf`
+
+Finally, create an empty file: satellite/dynconf/proxyconf.conf
+
+Give things a kick by running bin/cron as root.
+
 
 ## Cron
-Run bin/cron every minute as the aformentioned account.  This will update the
-dynconf/proxyconf.conf file and graceful-restart apache with sudo.
-
-## Sudo
-You'll need a sudoers line like this:
-ssakai  ALL=(root) NOPASSWD: /usr/bin/killall -USR1 httpd
+Run bin/cron every minute as root.  This will update the
+dynconf/proxyconf.conf file and graceful-restart apache.
 
 
 ## SELinux
