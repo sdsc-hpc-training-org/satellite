@@ -37,4 +37,7 @@ our $listenport = 443;
 # it's dynamically updated by bin/cron script
 our $httpdstubfile = $basename . '/../dynconf/proxyconf.conf';
 
+# nice(r) message pages go here
+our $htmldir = $basename . '/../html';
+
 1;
