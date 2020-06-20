@@ -28,7 +28,7 @@ our $ttl_secs = 176400;
 our $extport = 443;
 
 # the name users put in their clients
-our $extbasename = 'comet-user-content.sdsc.edu';
+our $extbasename = 'tscc-user-content.sdsc.edu';
 
 # the port apache binds to
 our $listenport = 443;

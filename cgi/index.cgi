@@ -41,7 +41,7 @@ sub pending_message
   #print "Content-type: text/plain\n\n";
   #print "This token is pending redemption.\n";
   #print "Please make a GET request from the host running the service to proxy.\n";
-  #print "\nExample: curl 'https://manage.comet-user-content.sdsc.edu/redeemtoken.cgi?token=<token>&port=<service_port>'\n";
+  #print "\nExample: curl 'https://manage.tscc-user-content.sdsc.edu/redeemtoken.cgi?token=<token>&port=<service_port>'\n";
   print "Content-type: text/html\n\n";
   print `cat $satconfig::htmldir/pending.html`;
   exit;
