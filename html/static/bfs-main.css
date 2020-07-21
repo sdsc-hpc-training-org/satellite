@@ -1,0 +1,314 @@
+@import url(//fonts.googleapis.com/css?family=Tauri);
+
+/* All screen sizes */
+
+body {
+	background-color: #eee;
+}
+
+main {
+	background-color: #fff;
+	border-bottom: 1px solid #350608;
+	overflow: hidden;
+}
+
+a {
+    color: #3243dc;
+}
+
+a:hover {
+    color: #2d5072;
+    text-decoration: underline;
+}
+
+/* Headlines */
+
+h1, h2, h3, h4, h5, h6 {
+	color: black;
+	font-family: "Tauri", sans-serif;
+	font-weight: normal;
+}
+
+h1 {
+	 color: #b50304;
+	 font-size: 30px;
+	 padding: 1em 0 .5em 0;
+}
+
+h2 {
+	 font-size: 20px;
+	 padding: .5em 0;
+}
+
+h3 {
+	 font-size: 18px;
+}
+
+h4 {
+	 font-size: 15px;
+	 font-weight: bold;
+	 line-height:15px;
+}
+
+h5 {
+	 font-size: 11px;
+	 line-height:13px;
+}
+
+h6 {
+	 font-size: 10px;
+	 line-height:12px;
+}
+
+/* Header - all pages */
+
+#title, #title-nav {
+	background-color: black;
+	justify-content: space-between;
+}
+
+#menu, #menu-nav {
+	background-color: #e20304;
+}
+
+#title, #menu {
+	width: 100%;
+}
+
+#title-nav, #menu-nav {
+	margin: 0 auto;
+	max-width: 1170px;
+	padding: .25em 1em;
+}
+
+#title .navbar-brand, #main-brand, #sub-brand, #nav-primary li>a, #nav-primary>a {
+	color: white;
+	font-family: "Tauri", sans-serif;
+	text-transform: uppercase;
+}
+
+#nav-primary>a {
+    font-size: 1em;
+}
+
+.navbar-brand {
+	padding-bottom: 0;
+	padding-top: 0;
+}
+
+#main-brand {
+	font-size: 1.4em;
+}
+
+#sub-brand {
+	font-size: .6em;
+	display: block;
+}
+
+.no-cap {
+	text-transform: lowercase;
+}
+
+#sdsc-logo {
+}
+
+#nav-primary .dropdown-menu a {
+	color: black;
+}
+
+#nav-primary .dropdown-menu a:hover {
+	background-color: #ddd;
+	text-decoration: underline;
+}
+
+.dropdown-toggle::after {
+	display:none
+}
+
+/* Footer - all pages */
+
+#footer {
+	text-align: center;
+}
+
+#footer p {
+	font-size: .8em;
+	margin: 0;
+}
+
+#footer a {
+	color: black;
+	text-decoration: underline;
+}
+
+/* Home Page Content */
+
+#home-main, #home-bottom {
+	border-bottom: none;
+	text-align: center;
+}
+
+/*#home-main a, #home-bottom a {
+	
+}*/
+
+#home-main {
+	background-color: #eee;
+}
+
+#top-content>div {
+	margin-top: 20px;
+}
+
+#top-content .headline {
+	display: block;
+	font-weight: bold;
+}
+
+#audiences>div {
+	padding: 10px;
+}
+
+#audiences .aud-box {
+	background-color: white;
+	border: 1px solid #ccc;
+	border-radius: 10px;
+	height: 100%;
+	padding-bottom: 1em;
+}
+
+#audiences .aud-box p.more {
+	bottom: 0;
+	left: 0;
+	margin: 15px auto;
+	position: absolute;
+	right: 0;
+}
+
+#audiences .aud-box p.teaser {
+    font-style: italic;
+    font-size: .7 rem;
+    margin: 0;
+}
+
+#audiences .aud-box p.teaser::before {
+    content: "(";
+}
+
+#audiences .aud-box p.teaser::after {
+    content: ")";
+}
+
+#audiences .aud-box li {
+	 text-align: left;
+}
+
+#audiences .aud-img {
+	width: 100%;
+}
+
+#audiences .aud-icon {
+	background-position: center;
+	background-repeat: no-repeat;
+	height: 40px;
+	position: relative;
+	top: -20px;
+	width: 40px;
+}
+
+#aud_staff .aud-icon {
+	background-color: #e27203; /*#c7862a;*/
+	background-image: url("/assets/images/conference-24.ico");
+}
+
+#aud_pi .aud-icon {
+	background-color: #abd44a; /*#97b64b;*/
+	background-image: url("/assets/images/research-24.ico");
+}
+
+#aud_cust .aud-icon {
+	background-color: #02a6ba; /*#7298d0;*/
+	background-image: url("/assets/images/handshake-24.ico");
+}
+
+#aud_bfs .aud-icon {
+	background-color: #ffcd00; /*#8d72d0;*/
+	background-image: url("/assets/images/combo-24.ico");
+}
+
+#audiences .aud-link {
+	font-weight: bold;
+}
+
+#aud_staff .aud-link {
+	color: #7e3f02; /*#6d4a17;*/
+}
+
+#aud_pi .aud-link {
+	color: #303e0f; /*#455323;*/
+}
+
+#aud_cust .aud-link {
+	color: #01444c; /*#3f5372;*/
+}
+
+#aud_bfs .aud-link {
+	color: #4d3d00; /*#5a4985;*/
+}
+
+#aud_bfs h3 {
+	 background: url("/assets/images/icon_lock.png") no-repeat scroll transparent;
+	 background-position: 15% 0;
+	 background-size: 16px;
+}
+
+#home-bottom {
+	background-color: white;
+	margin-top: 20px;
+	padding: 10px 0;
+}
+
+td.subleader {
+	 padding-left: 30px;
+}
+td.sub2leader {
+	 padding-left: 60px;
+}
+
+
+/* Medium screens and up */
+@media screen and (min-width:768px) {
+	#nav-primary li {
+		margin: 0 30px;	
+	}
+
+	#nav-primary li:first-child {
+		margin: 0 30px 0 0;	
+	}
+
+	#nav-primary .dropdown-menu {
+		background-color: #ddd; 
+	}
+
+	#nav-primary .dropdown-menu a:hover {
+		background-color: #eee;
+	}
+
+}
+
+/* Extra small screens and down */
+@media (max-width: 575.98px) {
+
+	#sub-brand {
+		display: none;
+	}
+
+	#logo-wrapper {
+		display: block;
+		width: 100%;
+	}
+
+	#sdsc-logo {
+		float: right;
+	}
+}
