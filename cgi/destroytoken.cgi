@@ -14,6 +14,8 @@ use CGI;
 use lib '../etc/';
 use satconfig;
 use Net::IP;
+use Sys::Syslog qw(:DEFAULT setlogsock);
+
 
 my $dbfile = $satconfig::dbfile;
 
@@ -68,6 +70,9 @@ oops("Nonce must be destroyed from host it was redeemed on") if ( $row[1] ne '' 
 my $sth = $dbh->prepare("delete from proxy where alias = ?");
 $sth->execute($nonce);
 $dbh->commit;
+
+# log for stats
+syslog("info", "satellite destroy token: %s requested-from: %s", $nonce, $srvip);
 
 
 print "Content-type: text/html\n\n";

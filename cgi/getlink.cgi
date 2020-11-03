@@ -6,6 +6,7 @@ use DBI;
 use lib '../etc/';
 use satconfig;
 use Net::IP;
+use Sys::Syslog qw(:DEFAULT setlogsock);
 
 
 sub oops($)
@@ -66,7 +67,10 @@ my $sth = $dbh->prepare("insert into proxy (alias, alias_compare_hash, state) va
 $sth->execute($nonce, $nonce_hash);
 $dbh->commit;
 
-
+# log this event to syslog so we can review it later
+# note: the token isn't a huge secret, hopefully the underlying webapp
+# has some kind of authentication.
+syslog("info", "satellite issued token: %s requested-from: %s", $nonce, $srvip);
 
 print "Content-type: text/plain\n\n";
 print "Your token is \n$nonce\n";

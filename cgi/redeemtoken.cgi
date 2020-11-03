@@ -13,6 +13,8 @@ use CGI;
 use lib '../etc/';
 use satconfig;
 use Net::IP;
+use Sys::Syslog qw(:DEFAULT setlogsock);
+
 
 my $dbfile = $satconfig::dbfile;
 
@@ -64,6 +66,9 @@ oops("Unknown nonce or nonce already used") unless( $row[0] eq $nonce && ! $sth-
 my $sth = $dbh->prepare("update proxy set dsthost=?, dstport=?, dstpath='/', state='mapped', modified = current_timestamp where alias_compare_hash = ?");
 $sth->execute($srvip, $port, $nonce_hash);
 $dbh->commit;
+
+# log for stats
+syslog("info", "satellite redeemed token: %s mapped-to: %s:%d", $nonce, $srvip, $port);
 
 
 print "Content-type: text/html\n\n";
