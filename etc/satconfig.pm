@@ -17,6 +17,10 @@ our $dbfile = $basename . '/../var/state.sqlite';
 our $tgtipmask = '10.21.0.0/16';
 #our $tgtipmask = '132.249.121.0/27';
 
+# allowed host/subnet for jobstate updates
+# format: subnet/mask (use /32 for host)
+our $jobstateipmask = '132.249.1.1/32';
+
 # number of secs an entry can remain in 'pending' or 'mapped' state
 # 'modified' field is updated when moving from pending to mapped.
 # comet has a max runtime of 48h

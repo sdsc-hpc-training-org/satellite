@@ -49,6 +49,15 @@ dynconf/proxyconf.conf file and graceful-restart apache with sudo.
 You'll need a sudoers line like this:
 ssakai  ALL=(root) NOPASSWD: /usr/bin/killall -USR1 httpd
 
+## Database schema
+Satellite uses sqlite3, see/set the location of the database in 
+`./etc/satconfig.pm   $dbfile`.  The default is `$basename . '/../var/state.sqlite';`.
+
+The schema looks like this:
+```
+CREATE TABLE proxy ( alias text not null, alias_compare_hash text not null, modified timestamp default current_timestamp, dsthost text, dstport integer, dstpath text, state text not null);
+CREATE TABLE jobstates ( jobid text primary key, state text not null, lastseen timestamp default current_timestamp);
+```
 
 ## SELinux
 This has been tested with SELinux in enforcing mode with targeted policy.
