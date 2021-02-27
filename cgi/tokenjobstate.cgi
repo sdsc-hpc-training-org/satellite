@@ -4,8 +4,11 @@
 # retrieves job state for given token
 # this should be used after linking the job id
 # linking is optional and just provides data to improve user experience
-# if not linked this script doesn't return an error, so it's safe to
+# if not linked this script returns an empty string, so it's safe to
 # use this script by default.
+#
+# when linked, output is a single line:
+# <staleness in secs> <state>
 
 use strict;
 use Digest::SHA qw(sha256_base64);
@@ -60,7 +63,7 @@ our $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 
 # whatever the token is we're going to delete its entry
 # we do want to make sure the token exists
-my $sth = $dbh->prepare("select ps.alias, js.state from jobstates js left join proxy ps using (jobid) where ps.alias_compare_hash = ?");
+my $sth = $dbh->prepare("select ps.alias, js.state, js.lastseen from jobstates js left join proxy ps using (jobid) where ps.alias_compare_hash = ?");
 $sth->execute($nonce_hash);
 my @row = $sth->fetchrow_array;
 
@@ -75,7 +78,13 @@ if ( $row[0] eq $nonce && ! $sth->fetchrow_array )
     $jobstate = $row[1] if ( defined $row[1] );
     $jobstate =~ s/[^-A-Za-z0-9 ._]//g;
 
-    printf("%s", $jobstate);
+    # also propagate staleness since we want to know when the entry was 
+    # last updated
+    my $lastseen = 0;
+    $lastseen = $row[2] if ( defined $row[2] );
+    my $staleness = time() - $lastseen;
+
+    printf("%d %s", $staleness, $jobstate);
 }
 
 

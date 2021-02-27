@@ -1,0 +1,5 @@
+CREATE TABLE proxy ( alias text not null, alias_compare_hash text not null, modified timestamp default current_timestamp, dsthost text, dstport integer, dstpath text, state text not null, jobid text default null);
+
+CREATE TABLE jobstates ( jobid text primary key, state text not null, lastseen timestamp default current_timestamp);
+
+
