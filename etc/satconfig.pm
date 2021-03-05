@@ -44,4 +44,14 @@ our $httpdstubfile = $basename . '/../dynconf/proxyconf.conf';
 # nice(r) message pages go here
 our $htmldir = $basename . '/../html';
 
+# job state codes indicating a job is waiting
+our @JOB_WAIT_STATE_CODES = ('CF', 'PD', 'RF', 'RH', 'RQ');
+
+# job state codes indicating a job is gone/exited/cancelled
+our @JOB_GONE_STATE_CODES = ('BF', 'CA', 'CG', 'DL', 'F', 'NF', 'OOM', 'PR', 'RD', 'RV', 'SI', 'SE', 'SO', 'ST', 'S', 'TO');
+
+# job state codes indicating a job is running
+our @JOB_RUN_STATE_CODES = ('R');
+
+
 1;

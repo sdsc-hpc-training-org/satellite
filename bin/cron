@@ -56,11 +56,15 @@ our $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
 # output is an array to be joined later.
 my @output;
 
+# newly mapped hosts should have state flipped to proxied
+# so client js knows to trigger refresh.
+my @map2proxy;
+
 # clear out old junk
 my $mincreate = time() - $satconfig::ttl_secs;
 my $sth = $dbh->prepare("delete from proxy where modified < datetime(?,'unixepoch')");
 $sth->execute($mincreate);
-my $sth = $dbh->prepare("select alias, dsthost, dstport from proxy where state = 'mapped' order by alias asc");
+$sth = $dbh->prepare("select alias, dsthost, dstport, state from proxy where (state = 'mapped' or state = 'proxied') order by alias asc");
 $sth->execute();
 $dbh->commit;
 while (my @row = $sth->fetchrow)
@@ -68,6 +72,7 @@ while (my @row = $sth->fetchrow)
     my $alias = $row[0];
     my $dsthost = $row[1];
     my $dstport = $row[2];
+    my $state = $row[3];
 
     # quietly skip entries with crap
     next unless ( $alias =~ /^[-a-zA-Z0-9]+$/ );
@@ -83,10 +88,20 @@ while (my @row = $sth->fetchrow)
     $tmpblock =~ s/_DSTHOST_/$dsthost/g;
     $tmpblock =~ s/_DSTPORT_/$dstport/g;
     unshift(@output, $tmpblock);
+
+    unshift(@map2proxy, $alias) if ( $state eq 'mapped' );
 }
 
 my $newbody = join("\n", @output);
 my $newbodyhash = sha256_hex($newbody);
+
+# mark mapped entries as proxied
+$sth = $dbh->prepare("update proxy set state = 'proxied' where alias = ?");
+foreach my $a (@map2proxy)
+{
+    $sth->execute($a);
+}
+$dbh->commit;
 
 # get the current body hash to see if any changes need to be made.
 my $sha = Digest::SHA->new(256);

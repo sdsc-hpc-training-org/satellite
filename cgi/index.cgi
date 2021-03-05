@@ -92,7 +92,7 @@ if ( $row[0] eq $nonce )
 }
 
 # okay, how about waiting on cron?
-$sth = $dbh->prepare("select alias from proxy where alias_compare_hash = ? and state = 'mapped'");
+$sth = $dbh->prepare("select alias from proxy where alias_compare_hash = ? and (state = 'mapped' or state = 'proxied')");
 $sth->execute($nonce_hash);
 my @row = $sth->fetchrow_array;
 if ( $row[0] eq $nonce )

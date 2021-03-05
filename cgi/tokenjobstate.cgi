@@ -9,6 +9,19 @@
 #
 # when linked, output is a single line:
 # <staleness in secs> <state>
+#
+# state is either a basic state or extended state.
+#
+# basic: 
+#  U  = Unknown
+#  PE = Pending (waiting for token to be redeemed)
+#  M  = Mapped (mapping entry created, cron not run yet)
+#  PR = Proxied (cron created proxy entry) user agent should reload url.
+#
+# extended (includes basic, plus):
+#  Q  = Job in the batch queue.
+#  R  = Job running, but hasn't redeemed token yet.
+#  D  = Job died, will never run.
 
 use strict;
 use Digest::SHA qw(sha256_base64);
@@ -19,6 +32,7 @@ use satconfig;
 use Net::IP;
 use Sys::Syslog qw(:DEFAULT setlogsock);
 
+use Data::Dumper;
 
 my $dbfile = $satconfig::dbfile;
 
@@ -61,9 +75,7 @@ our $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
   RaiseError => 1,
 });
 
-# whatever the token is we're going to delete its entry
-# we do want to make sure the token exists
-my $sth = $dbh->prepare("select ps.alias, js.state, js.lastseen from jobstates js left join proxy ps using (jobid) where ps.alias_compare_hash = ?");
+my $sth = $dbh->prepare("select ps.alias, js.state, strftime('%s',js.lastseen), ps.state, strftime('%s',ps.modified), ps.jobid from proxy ps left join jobstates js using (jobid) where ps.alias_compare_hash = ?");
 $sth->execute($nonce_hash);
 my @row = $sth->fetchrow_array;
 
@@ -84,7 +96,108 @@ if ( $row[0] eq $nonce && ! $sth->fetchrow_array )
     $lastseen = $row[2] if ( defined $row[2] );
     my $staleness = time() - $lastseen;
 
-    printf("%d %s", $staleness, $jobstate);
-}
+    # we're going to return a synthetic state based on more info
+    my $dispjobstate = 'U';
 
+    my $proxystate = '';
+    $proxystate = $row[3] if ( defined $row[3] );
+    $proxystate =~ s/[^-A-Za-z0-9 ._]//g;
+
+    my $proxylastseen = 0;
+    $proxylastseen = $row[4] if ( defined $row[4] );
+    my $proxystaleness = time() - $proxylastseen;
+
+    my $jobid  = '';
+    $jobid = $row[5] if ( defined $row[5] );
+
+    # convert jobstate into Waiting/Running/Gone/Unknown
+    # this is for slurm, other resource managers need something else.
+    if ( grep(/^$jobstate$/, @satconfig::JOB_GONE_STATE_CODES) )
+    {
+        $jobstate = 'G';
+    } 
+    elsif ( grep(/^$jobstate$/, @satconfig::JOB_RUN_STATE_CODES) )
+    {
+        $jobstate = 'R';
+    } 
+    elsif ( grep(/^$jobstate$/, @satconfig::JOB_WAIT_STATE_CODES) )
+    {
+        $jobstate = 'W';
+    } 
+    else
+    {
+        $jobstate = 'U';
+    }
+
+    # the lack of a job id or job state  means we can't use extended states
+    # just use the proxy states
+    # also ignore job state if it is too old (10m / 600s)
+    if ( $jobid eq '' || ( $jobid ne '' && $jobstate eq 'U') || $staleness > 600 )
+    {
+        if ( $proxystate eq 'pending' )
+        {
+            $dispjobstate = 'PE';
+        } 
+        elsif ( $proxystate  eq 'mapped' )
+        {
+            $dispjobstate = 'M';
+        } 
+        elsif ( $proxystate eq 'proxied' )
+        {
+            $dispjobstate = 'PR';
+        }
+    } 
+    
+    # use extended states since we have a jobid
+    else
+    {
+        # the job is waiting
+        if ( $jobstate eq 'W' )
+        {
+            # waiting and not mapped means it's in the queue
+            if ( $proxystate eq 'pending' )
+            {
+                $dispjobstate = 'Q';
+            } 
+            # job redeemed token before the job state updated
+            elsif ( $proxystate eq 'mapped' )
+            {
+                $dispjobstate = 'M';
+            }
+            # job redeemed token and proxy entry created before job state updated
+            elsif ( $proxystate eq 'proxied' )
+            {
+                $dispjobstate = 'PR';
+            }
+        }
+
+        # the job is running
+        elsif ( $jobstate eq 'R' )
+        {
+            # job is running but hasn't redeemed token yet.
+            if ( $proxystate eq 'pending' )
+            {
+                $dispjobstate = 'R';
+            } 
+            # job is running, redeemed token, cron not yet run.
+            elsif ( $proxystate eq 'mapped' )
+            {
+                $dispjobstate = 'M';
+            } 
+            # job running, redeemed token, cron run.
+            elsif ( $proxystate eq 'proxied' )
+            {
+                $dispjobstate = 'PR';
+            }
+        }  
+        # the job disappeared; it may have been cancelled or ran and exited
+        elsif ( $jobstate eq 'G' )
+        {
+            # it's never coming back, so always dead.
+            $dispjobstate = 'D';
+        } 
+    }
+
+    printf("%d %s", $proxystaleness, $dispjobstate);
+}
 
