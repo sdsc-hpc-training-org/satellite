@@ -45,13 +45,18 @@ our $httpdstubfile = $basename . '/../dynconf/proxyconf.conf';
 our $htmldir = $basename . '/../html';
 
 # job state codes indicating a job is waiting
-our @JOB_WAIT_STATE_CODES = ('CF', 'PD', 'RF', 'RH', 'RQ');
-
-# job state codes indicating a job is gone/exited/cancelled
-our @JOB_GONE_STATE_CODES = ('BF', 'CA', 'CG', 'DL', 'F', 'NF', 'OOM', 'PR', 'RD', 'RV', 'SI', 'SE', 'SO', 'ST', 'S', 'TO');
+our @JOB_WAIT_STATE_CODES = ('CF', 'PD', 'RF', 'RH', 'RQ',
+  'CONFIGURING', 'PENDING', 'REQUEUE_FED', 'REQUEUE_HOLD', 'REQUEUED');
 
 # job state codes indicating a job is running
-our @JOB_RUN_STATE_CODES = ('R');
+our @JOB_RUN_STATE_CODES = ('R', 'RUNNING');
 
+# job state codes indicating a job is gone/exited/cancelled
+our @JOB_GONE_STATE_CODES = ('BF', 'CA', 'CG', 'DL', 'F', 'NF', 'OOM',
+  'PR', 'RD', 'RV', 'SI', 'SE', 'SO', 'ST', 'S', 'TO',
+  'BOOT_FAIL', 'CANCELLED', 'COMPLETING', 'COMPLETED', 'DEADLINE', 'FAILED', 
+  'NODE_FAIL', 'NODEFAIL' , 'OUT_OF_MEMORY', 'OUTOFMEMORY', 'PREEMPTED', 
+  'RESV_DEL_HOLD', 'SIGNALING', 'SPECIAL_EXIT', 'STAGE_OUT', 'STOPPED', 
+  'SUSPENDED', 'TIMEOUT');
 
 1;

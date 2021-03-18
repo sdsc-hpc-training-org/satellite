@@ -48,6 +48,7 @@ sub oops($)
 # stop if wrong method
 oops("Only GET method is supported") unless($ENV{'REQUEST_METHOD'} eq 'GET');
 
+
 # get the token/nonce
 my $cgi = CGI->new;
 my $nonce = $cgi->param('token');
@@ -62,6 +63,17 @@ if ( $nonce =~ /\./ )
     oops("Missing 'token' parameter") unless $nonce;
 }
 
+
+# CORS sanity check
+# the browser may send an ORIGIN header, which is the
+# URL making the request.
+my $origin = '';
+if ( defined $ENV{'HTTP_ORIGIN'} )
+{
+    my $exporigin = sprintf("https://%s.%s", $nonce, $satconfig::extbasename);
+    $origin = $ENV{'HTTP_ORIGIN'} if ( $ENV{'HTTP_ORIGIN'} =~ /^$exporigin/ );
+}
+    
 # requests come from the user's browser, which can be anywhere.
 # don't restrict.
 
@@ -75,11 +87,16 @@ our $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
   RaiseError => 1,
 });
 
-my $sth = $dbh->prepare("select ps.alias, js.state, strftime('%s',js.lastseen), ps.state, strftime('%s',ps.modified), ps.jobid from proxy ps left join jobstates js using (jobid) where ps.alias_compare_hash = ?");
+my $sth = $dbh->prepare("select ps.alias, js.state, js.lastseen, ps.state, strftime('%s',ps.modified), ps.jobid from proxy ps left join jobstates js using (jobid) where ps.alias_compare_hash = ?");
 $sth->execute($nonce_hash);
 my @row = $sth->fetchrow_array;
 
 # we're going to return something at this point, and it can't be an error.
+if ( $origin ne '' )
+{
+    printf("Access-Control-Allow-Origin: %s\n", $origin);
+    print "Vary: Origin\n";
+}
 print "Content-type: text/plain\n\n";
 
 if ( $row[0] eq $nonce && ! $sth->fetchrow_array ) 
@@ -106,10 +123,8 @@ if ( $row[0] eq $nonce && ! $sth->fetchrow_array )
     my $proxylastseen = 0;
     $proxylastseen = $row[4] if ( defined $row[4] );
     my $proxystaleness = time() - $proxylastseen;
-
     my $jobid  = '';
     $jobid = $row[5] if ( defined $row[5] );
-
     # convert jobstate into Waiting/Running/Gone/Unknown
     # this is for slurm, other resource managers need something else.
     if ( grep(/^$jobstate$/, @satconfig::JOB_GONE_STATE_CODES) )
@@ -198,6 +213,7 @@ if ( $row[0] eq $nonce && ! $sth->fetchrow_array )
         } 
     }
 
-    printf("%d %s", $proxystaleness, $dispjobstate);
+    #printf("%d %s", $proxystaleness, $dispjobstate);
+    printf("%s", $dispjobstate);
 }
 
