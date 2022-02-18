@@ -4,7 +4,9 @@
 SRPS is a prototype system that allows users to launch secure standard Jupyter Notebooks on on any Expanse compute node using a reverse proxy server. Notebooks are hosted on the internal cluster network as an HTTP service using standard Jupyter commands. The service available to the user outside of the cluster firewall over HTTPS connection between the external users web browser and the reverse proxy server. The goal is to minimize software changes for our users while improving the security of user notebooks running on our HPC systems. The SRPS service is capable of running on any HPC system capable of supporting the RP server (needs Apache).
 
 The Satellite Proxy Server system is designed to simplify the process of launching a secure Jupyter Notebook by the
-client. The system consists of two main components: the Satellite Reverse Proxy Service and the Jupyter Spawner Client. 129
+client. The system consists of two main components: 
+1 the Satellite Reverse Proxy Service 
+2 the Jupyter Spawner Client.
 This page describes the Satellite Reverse Proxy Service. For an example of an SRPS client, see the [galyleo client site](https://github.com/mkandes/galyleo).
 
 ## Notes
