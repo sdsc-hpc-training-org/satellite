@@ -1,4 +1,4 @@
-# Satellite: A Jypyter Notebook Proxy
+# Satellite: A Jupyter Notebook Proxy
 
 ## Notes
 These cgi scripts and configuration are intended to work with
