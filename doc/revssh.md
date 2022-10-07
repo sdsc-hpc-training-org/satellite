@@ -35,6 +35,13 @@ Modern OpenSSH supports the use of *SSH Certificates*, which allow an *SSH CA* t
 The certificates come with some added controls not available in previous iterations.
 * They have an expiration time, which can be helpfully set to the end of the Satellite session's maximum lifetime. The authenticator will self-invalidate if the process to reclaim the account does not run in time.
 * The certificate contains a list of principals (usually one) that it may be used for. This allows the Revssh client to derive the target account unambiguously. It also allows the clean-up process to use a long-lived certificate whose only allowed capability is to kill off sshd processes owned by any account in the pool.
+  
+### Iteration 5: AuthorizedKeysCommand
+Modern OpenSSH also supports the use of an arbitrary command to retrieve the contents of an account's `authorized_keys` file. We can leverage this to read the keys out of the Satellite database, and have code to only generate the output if the session is still valid.
+  
+This approach alleviates the need to manage a KRL and CA signing key, as well as the extra code to generate the KRL and put it in the right place. As an added bonus, there's only one point of truth: the database.
+  
+The cleanup process may require `sudo`, or the code to generate the authorized_keys content can inject a special public key for cleanup.
 
 
 ## Containing the Revssh Account
@@ -55,9 +62,11 @@ This is actually something we'll have to accept unless specific invocations of `
 ### Long-Lived Connection
 Once the Satellite session has expired or been deleted, an existing login may continue to persist unless it is killed off. Furthermore, a certificate will still be valid until it has expired.
   
-We employ a KRL to prematurely invalidate certificates for deleted Satellite sessions. This way a revssh client can continue to try reconnecting, however it will not succeed.
+~~We employ a KRL to prematurely invalidate certificates for deleted Satellite sessions. This way a revssh client can continue to try reconnecting, however it will not succeed.~~
 
-A cron-driven process will need to kill off any processes owned by accounts associated with deleted sessions. (Or conversely, kill off any processes owned by accounts not associated with an active session.) This can leverage a special certificate that allows the holder of the private key to authenticate as any user in the account pool, and execute only one command - to clean up the account's processes. Alternatively this might be an exception and allow the use of sudo to kill a pid.
+The use of an `AuthorizedKeysCommand` causes the contents of the account's authorized_keys file to be generated on-the-fly. Once a session is expired or deleted, the code to generate this contents will no longer produce usable output.
+
+A cron-driven process will need to kill off any processes owned by accounts associated with deleted sessions. (Or conversely, kill off any processes owned by accounts not associated with an active session.) ~~This can leverage a special certificate that allows the holder of the private key to authenticate as any user in the account pool, and execute only one command - to clean up the account's processes.~~ Alternatively this might be an exception and allow the use of sudo to kill a pid, or a special public key injected by the aforementioned code.
 
 ### Point A Tunnel Somewhere Outside the Environment
 This isn't really a thing that can happen on the Satellite server, but worth mentioning. A revssh client can set the target of a remote-forward to a host outside the environment and bounce the connection somewhere else.
