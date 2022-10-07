@@ -59,4 +59,26 @@ our @JOB_GONE_STATE_CODES = ('BF', 'CA', 'CG', 'DL', 'F', 'NF', 'OOM',
   'RESV_DEL_HOLD', 'SIGNALING', 'SPECIAL_EXIT', 'STAGE_OUT', 'STOPPED', 
   'SUSPENDED', 'TIMEOUT');
 
+# unix group for revssh account pool
+# CAUTION: DO NOT PUT USER ACCOUNTS IN THIS GROUP
+# ACCOUNTS IN THIS GROUP WILL BE HANDED TO ANONYMOUS USERS OF
+# SATELLITE
+# This group must have enough groups to satisfy the peak number 
+# of concurrent sessions and then some for abandoned sessions.
+our $revssh_group = 'revssh';
+
+# chroot directory for revssh sockets
+# This directory should live on persistent storage.
+# This directory must be owned by root, not writable by non-root.
+# This directory must contain directories for each account in revssh_group,
+#   which in turn are also owned by root.
+# Each account directory must contain a "socket" directory, owned and only writable by the account.
+# e.g 
+#   root:root 0755   $revssh_chroot_dir
+#   root:root 0755   $revssh_chroot_dir/<acct>
+#   <acct>:root 0755 $revssh_chroot_dir/<acct>/socket
+
+our $revssh_chroot_dir = '/var/lib/satellite-revssh/';
+
+
 1;
