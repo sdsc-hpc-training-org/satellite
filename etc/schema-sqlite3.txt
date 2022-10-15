@@ -7,7 +7,8 @@ CREATE TABLE proxy (
   dstpath text, 
   state text not null, 
   jobid text default null, 
-  revssh_user default null
+  revssh_pubkey default null,
+  revssh_user unique default null
 );
 
 CREATE TABLE jobstates ( jobid text primary key, state text not null, lastseen timestamp default current_timestamp);

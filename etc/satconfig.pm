@@ -80,5 +80,12 @@ our $revssh_group = 'revssh';
 
 our $revssh_chroot_dir = '/var/lib/satellite-revssh/';
 
+# desired ssh-keygen binary to use
+our $revssh_sshkeygen = '/usr/bin/ssh-keygen';
+
+# tmpfs / ram-backed filesystem (NOT PERSISTENT)
+# NOTE: this is actually a mtemp template.
+our $revssh_tmpfsdir = '/dev/shm/satellite-revssh_XXXXXXXXXXXX';
 
 1;
+
