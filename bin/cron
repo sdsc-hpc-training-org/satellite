@@ -64,7 +64,7 @@ my @map2proxy;
 my $mincreate = time() - $satconfig::ttl_secs;
 my $sth = $dbh->prepare("delete from proxy where modified < datetime(?,'unixepoch')");
 $sth->execute($mincreate);
-$sth = $dbh->prepare("select alias, dsthost, dstport, state from proxy where (state = 'mapped' or state = 'proxied') order by alias asc");
+$sth = $dbh->prepare("select alias, dsthost, dstport, state from proxy where (state = 'mapped' or state = 'proxied') and revssh_user is null order by alias asc");
 $sth->execute();
 $dbh->commit;
 while (my @row = $sth->fetchrow)
