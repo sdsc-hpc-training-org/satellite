@@ -1,0 +1,63 @@
+#!/usr/bin/perl -w
+# revssh-authorized-keys
+# retrieve authorized keys file contents for the given account
+
+use strict;
+use lib('../etc');
+use satconfig;
+use DBI;
+use DBD::SQLite::Constants qw/:file_open/;
+use File::Basename qw(dirname); 
+
+use Data::Dumper;
+my $dbfile = $satconfig::dbfile;
+my $basename = dirname(Cwd::abs_path($0));
+chdir $basename;
+
+if ( scalar @ARGV != 1 )
+{
+    print STDERR ("Usage: $0 <username>\n");
+    exit 1;
+}
+my $sshuser = $ARGV[0];
+
+# malformed usernames have no entries
+if ( $sshuser =~ /[^-_.a-zA-Z0-9]/ )
+{
+    exit 0;
+}
+
+# connect to the db since that's the remainder of what we do.
+our $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+  AutoCommit => 1,
+  RaiseError => 0,
+  PrintError => 0,
+  sqlite_open_flags => SQLITE_OPEN_READONLY,
+});
+
+
+# note that the cron script next to this one will clean out expired entries
+# don't forget to run it
+# we don't run it here because:
+#   sshd has the potential to invoke this script a lot
+#   the database is opened in read-only mode in the unlikely event sql can be injected
+# ... we can still refuse to return a stale entry though!
+my $mincreate = time() - $satconfig::ttl_secs;
+my $sth = $dbh->prepare("select dsthost, revssh_pubkey from proxy where revssh_user = ? and modified >= datetime(?,'unixepoch')");
+$sth->execute($sshuser, $mincreate);
+
+# the schema contains a unique constraint on revssh_user, so there should
+# only be 0 or 1 rows
+my @row = $sth->fetchrow;
+exit 0 unless ( scalar @row == 2 );
+
+my $dsthost = $row[0];
+my $pubkey = $row[1];
+
+# sometimes a newline sneaks in, it's normally not a problem.
+$pubkey =~ s/\n//g;
+$pubkey =~ s/\r//g;
+
+exit 0 unless ( $dsthost =~ /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/ );
+
+printf("from=\"%s\" %s\n", $dsthost, $pubkey);
