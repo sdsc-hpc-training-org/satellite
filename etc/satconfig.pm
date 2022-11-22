@@ -14,8 +14,8 @@ our $dbfile = $basename . '/../var/state.sqlite';
 
 # allowed subnet for reverse-proxy targets
 # format: subnet/mask
-our $tgtipmask = '10.21.0.0/16';
-#our $tgtipmask = '132.249.121.0/27';
+#our $tgtipmask = '10.21.0.0/16';
+our $tgtipmask = '132.249.121.0/27';
 
 # allowed host/subnet for jobstate updates
 # format: subnet/mask (use /32 for host)

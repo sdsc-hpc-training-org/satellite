@@ -13,7 +13,9 @@ use strict;
 use Digest::SHA qw(sha256_base64);
 use DBI;
 use CGI;
-use lib '../etc/';
+use Cwd;
+use File::Basename qw(dirname);
+use lib(dirname(Cwd::abs_path($0)) . '/../etc');
 use satconfig;
 use Net::IP;
 

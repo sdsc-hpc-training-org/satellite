@@ -3,11 +3,13 @@
 # run this via cron from an account that can write the httpd config stub
 
 use strict;
-use lib('../etc');
+use Cwd;
+use File::Basename qw(dirname); 
+use lib(dirname(Cwd::abs_path($0)) . '/../etc');
 use satconfig;
 use DBI;
 use Digest::SHA qw(sha256_hex);
-use File::Basename qw(dirname); 
+use Data::Dumper;
 
 my $basename = dirname(Cwd::abs_path($0));
 chdir $basename;
@@ -27,8 +29,8 @@ my $template = <<_VHOST_BODY_;
     RewriteCond %{HTTP:Connection} upgrade [NC]
     RewriteRule .* "ws://_DSTHOST_:_DSTPORT_%{REQUEST_URI}" [P]
 
-    ProxyPass "/" "http://_DSTHOST_:_DSTPORT_/"
-    ProxyPassReverse "/" "http://_DSTHOST_:_DSTPORT_/"
+    ProxyPass "/" "_PROXY_TARGET_"
+    ProxyPassReverse "/" "_PROXY_TARGET_"
 </Virtualhost>
 _VHOST_BODY_
 
@@ -64,22 +66,37 @@ my @map2proxy;
 my $mincreate = time() - $satconfig::ttl_secs;
 my $sth = $dbh->prepare("delete from proxy where modified < datetime(?,'unixepoch')");
 $sth->execute($mincreate);
-$sth = $dbh->prepare("select alias, dsthost, dstport, state from proxy where (state = 'mapped' or state = 'proxied') and revssh_user is null order by alias asc");
+$sth = $dbh->prepare("select alias, dsthost, dstport, state, revssh_user from proxy where (state = 'mapped' or state = 'proxied') order by alias asc");
 $sth->execute();
 $dbh->commit;
 while (my @row = $sth->fetchrow)
 {
+    print Dumper(@row);
     my $alias = $row[0];
     my $dsthost = $row[1];
     my $dstport = $row[2];
     my $state = $row[3];
+    my $revssh_user = $row[4];
 
     # quietly skip entries with crap
     next unless ( $alias =~ /^[-a-zA-Z0-9]+$/ );
     next unless ( $dsthost =~ /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/ );
-    next unless ( $dstport =~ /^[0-9]{4,5}$/ );
-    next unless ( $dstport > 1023 && $dstport < 65536 );
+    next unless ( !defined $dstport || $dstport =~ /^[0-9]{4,5}$/ );
+    next unless ( !defined $dstport || $dstport > 1023 && $dstport < 65536 );
+    next unless ( !$revssh_user || $revssh_user =~ /^[-a-zA-Z0-9_.]+$/ );
+    next unless ( defined $dstport || defined $revssh_user );
+    next if ( defined $dstport && defined $revssh_user );
 
+    my $proxytarget = '';   
+    if ( $revssh_user )
+    {
+        $proxytarget = sprintf("unix://%s/%s/socket|http://localhost:%d/",
+          $satconfig::revssh_chroot_dir, $revssh_user, $dstport);
+    } else
+    {
+        $proxytarget = sprintf("http://%s:%d/", $dsthost, $dstport);
+    }
+    
     my $tmpblock = $template;
     $tmpblock =~ s/_LISTENPORT_/$listenport/g;
     $tmpblock =~ s/_EXTPORT_/$extport/g;
@@ -87,6 +104,7 @@ while (my @row = $sth->fetchrow)
     $tmpblock =~ s/_ALIAS_/$alias/g;
     $tmpblock =~ s/_DSTHOST_/$dsthost/g;
     $tmpblock =~ s/_DSTPORT_/$dstport/g;
+    $tmpblock =~ s/_PROXY_TARGET_/$proxytarget/g;
     unshift(@output, $tmpblock);
 
     unshift(@map2proxy, $alias) if ( $state eq 'mapped' );
