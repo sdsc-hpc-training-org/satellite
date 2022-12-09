@@ -31,3 +31,8 @@ if ( $ARGV[0] eq 'httpdstubfile' )
     exit(0);
 }
 
+if ( $ARGV[0] eq 'revssh_chroot_dir' )
+{
+    printf("%s\n", $satconfig::revssh_chroot_dir);
+    exit(0);
+}

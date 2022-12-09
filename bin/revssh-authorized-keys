@@ -61,4 +61,6 @@ $pubkey =~ s/\r//g;
 
 exit 0 unless ( $dsthost =~ /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/ );
 
-printf("from=\"%s\" %s\n", $dsthost, $pubkey);
+# from= doesn't work in an unprivileged container since the
+# src ip gets masked.
+printf("%s\n", $pubkey);

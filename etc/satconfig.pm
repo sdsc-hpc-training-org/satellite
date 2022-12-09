@@ -32,10 +32,10 @@ our $ttl_secs = 176400;
 our $extport = 443;
 
 # the name users put in their clients
-our $extbasename = 'comet-user-content.sdsc.edu';
+our $extbasename = 'satellite.hammajang.sdsc.edu';
 
 # the port apache binds to
-our $listenport = 443;
+our $listenport = 80;
 
 # the stub file for the apache config
 # it's dynamically updated by bin/cron script

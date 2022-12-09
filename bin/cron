@@ -17,17 +17,17 @@ chdir $basename;
 # this will turn into a series of vhost entries
 my $template = <<_VHOST_BODY_;
 <VirtualHost *:_LISTENPORT_>
-    SSLEngine on
+    #SSLEngine on
 
-    SSLCertificateFile /var/secrets/http-server.pem
-    SSLCertificateKeyFile /var/secrets/http-server.privkey
-    SSLCertificateChainFile /var/secrets/incommon-interm.pem
+    #SSLCertificateFile /var/secrets/http-server.pem
+    #SSLCertificateKeyFile /var/secrets/http-server.privkey
+    #SSLCertificateChainFile /var/secrets/incommon-interm.pem
 
     ServerName _ALIAS_._EXTBASENAME_:_EXTPORT_
     RewriteEngine on
     RewriteCond %{HTTP:Upgrade} websocket [NC]
     RewriteCond %{HTTP:Connection} upgrade [NC]
-    RewriteRule .* "ws://_DSTHOST_:_DSTPORT_%{REQUEST_URI}" [P]
+    RewriteRule .* "_WS_TARGET_%{REQUEST_URI}" [P]
 
     ProxyPass "/" "_PROXY_TARGET_"
     ProxyPassReverse "/" "_PROXY_TARGET_"
@@ -71,7 +71,7 @@ $sth->execute();
 $dbh->commit;
 while (my @row = $sth->fetchrow)
 {
-    print Dumper(@row);
+    #print Dumper(@row);
     my $alias = $row[0];
     my $dsthost = $row[1];
     my $dstport = $row[2];
@@ -88,13 +88,17 @@ while (my @row = $sth->fetchrow)
     next if ( defined $dstport && defined $revssh_user );
 
     my $proxytarget = '';   
+    my $wstarget = '';
     if ( $revssh_user )
     {
-        $proxytarget = sprintf("unix://%s/%s/socket|http://localhost:%d/",
-          $satconfig::revssh_chroot_dir, $revssh_user, $dstport);
+        $proxytarget = sprintf("unix://%s/%s/socket/tunnel|http://localhost/",
+          $satconfig::revssh_chroot_dir, $revssh_user);
+        $wstarget = sprintf("unix://%s/%s/socket/tunnel|ws://localhost/",
+          $satconfig::revssh_chroot_dir, $revssh_user);
     } else
     {
         $proxytarget = sprintf("http://%s:%d/", $dsthost, $dstport);
+        $wstarget = sprintf("ws://%s:%d/", $dsthost, $dstport);
     }
     
     my $tmpblock = $template;
@@ -105,6 +109,8 @@ while (my @row = $sth->fetchrow)
     $tmpblock =~ s/_DSTHOST_/$dsthost/g;
     $tmpblock =~ s/_DSTPORT_/$dstport/g;
     $tmpblock =~ s/_PROXY_TARGET_/$proxytarget/g;
+    $tmpblock =~ s/_WS_TARGET_/$wstarget/g;
+
     unshift(@output, $tmpblock);
 
     unshift(@map2proxy, $alias) if ( $state eq 'mapped' );
