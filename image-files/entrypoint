@@ -1,0 +1,77 @@
+#!/bin/bash
+
+cd $(dirname $0)
+
+SATDIR=/var/www/satellite
+
+# make the state database if it's missing
+# the containing directory needs to be writable by the web server
+DBFILE=$( "${SATDIR}/bin/getconf" dbfile )
+DBDIR=$( dirname "${DBFILE}" )
+if [[ ! -d "${DBDIR}" ]]; then
+  echo "Creating missing state dir: ${DBDIR}"
+  mkdir -p "${DBDIR}"
+  chown :www-data "${DBDIR}"
+  chmod 770 "${DBDIR}"
+fi
+
+if [[ ! -e "${DBFILE}" ]]; then
+  echo "Creating missing state database: ${DBFILE}"
+  sqlite3 "${DBFILE}" < "${SATDIR}/etc/schema-sqlite3.txt" 
+  chown :www-data "${DBFILE}"
+  chmod 660 "${DBFILE}"
+fi
+
+# make the chroot directory for revssh if it doesn't exist
+REVSSHDIR=$( "${SATDIR}/bin/getconf" revssh_chroot_dir )
+if [[ ! -d "${REVSSHDIR}" ]]; then
+  mkdir -p "${REVSSHDIR}"
+fi
+
+# make the revssh unix group if it doesn't exist
+REVSSHGROUP=$( "${SATDIR}/bin/getconf" revssh_group )
+getent group "${REVSSHGROUP}"
+if [[ $? -ne 0 ]]; then
+  echo "Creating missing group: ${REVSSHGROUP}"
+  groupadd "${REVSSHGROUP}"  
+  echo "Creating some users in pool..."
+  # add some users to it
+  for I in $( seq -f '%04.0f' 1 200 ); do
+    useradd -G "${REVSSHGROUP}" -M -s /bin/false -d / "revssh${I}"
+    mkdir -p "${REVSSHDIR}/revssh${I}/socket"
+    chown "revssh${I}:root" "${REVSSHDIR}/revssh${I}/socket"
+  done
+fi
+
+mkdir /run/sshd
+
+# We'll need persistent host keys for ssh, otherwise the clients will be VERY unhappy.
+HOSTDIR="/var/secrets/ssh"
+if [[ ! -d "${HOSTDIR}" ]]; then
+  mkdir -p "${HOSTDIR}"
+  chmod 700 "${HOSTDIR}"
+fi
+
+# RSA key
+if [[ ! -f "${HOSTDIR}/ssh_host_rsa_key" ]]; then
+  ssh-keygen -f "${HOSTDIR}/ssh_host_rsa_key" -t rsa -N ''
+fi
+
+# ed25519 key
+if [[ ! -f "${HOSTDIR}/ssh_host_ed25519_key" ]]; then
+  ssh-keygen -f "${HOSTDIR}/ssh_host_ed25519_key" -t ed25519 -N ''
+fi
+   
+# no ecdsa key because this algorithm is fragile
+
+
+# SSL termination happens outside the container.
+service apache2 restart
+ 
+service ssh restart
+   
+while true; do
+  "${SATDIR}/bin/cron"
+  sleep 10
+done
+

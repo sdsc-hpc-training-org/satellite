@@ -10,36 +10,36 @@ package satconfig;
 our $pidfile = '/var/run/httpd/httpd.pid';
 
 # location of the database file
-our $dbfile = $basename . '/../var/state.sqlite';
+our $dbfile = defined $ENV{'SAT_CONFIG_DBFILE'} ? $ENV{'SAT_CONFIG_DBFILE'} : $basename . '/../var/state.sqlite';
 
 # allowed subnet for reverse-proxy targets
 # format: subnet/mask
-#our $tgtipmask = '10.21.0.0/16';
-our $tgtipmask = '132.249.121.0/27';
+our $tgtipmask = defined $ENV{'SAT_CONFIG_TGTIPMASK'} ? $ENV{'SAT_CONFIG_TGTIPMASK'} : '10.0.0.0/8';
 
 # allowed host/subnet for jobstate updates
 # format: subnet/mask (use /32 for host)
-our $jobstateipmask = '132.249.1.1/32';
+# anyone on an allowed host can push a jobstate update, be as specific as practical here
+our $jobstateipmask = defined $ENV{'SAT_CONFIG_JOBSTATEIPMASK'} ? $ENV{'SAT_CONFIG_JOBSTATEIPMASK'} : '10.1.1.1/32';
 
 # number of secs an entry can remain in 'pending' or 'mapped' state
 # 'modified' field is updated when moving from pending to mapped.
 # comet has a max runtime of 48h
 # set max to 49h in case job sat in queue a little long.
-our $ttl_secs = 176400;
+our $ttl_secs = defined $ENV{'SAT_CONFIG_TTL_SECS'} ? $ENV{'SAT_CONFIG_TTL_SECS'} : 176400;
 
 # the externally-facing port requests come in to
 # usually the same as listenport unless DNAT is in play.
-our $extport = 443;
+our $extport = defined $ENV{'SAT_CONFIG_EXTPORT'} ? $ENV{'SAT_CONFIG_EXTPORT'} : 443;
 
 # the name users put in their clients
-our $extbasename = 'satellite.hammajang.sdsc.edu';
+our $extbasename = defined $ENV{'SAT_CONFIG_EXTBASENAME'} ? $ENV{'SAT_CONFIG_EXTBASENAME'} : 'satellite.example.com';
 
 # the port apache binds to
-our $listenport = 80;
+our $listenport = defined $ENV{'SAT_CONFIG_LISTENPORT'} ? $ENV{'SAT_CONFIG_LISTENPORT'} : 443;
 
 # the stub file for the apache config
 # it's dynamically updated by bin/cron script
-our $httpdstubfile = $basename . '/../dynconf/proxyconf.conf';
+our $httpdstubfile = defined $ENV{'SAT_CONFIG_HTTPDSTUBFILE'} ? $ENV{'SAT_CONFIG_HTTPDSTUBFILE'} : $basename . '/../dynconf/proxyconf.conf';
 
 # nice(r) message pages go here
 our $htmldir = $basename . '/../html';

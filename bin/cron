@@ -17,11 +17,7 @@ chdir $basename;
 # this will turn into a series of vhost entries
 my $template = <<_VHOST_BODY_;
 <VirtualHost *:_LISTENPORT_>
-    #SSLEngine on
-
-    #SSLCertificateFile /var/secrets/http-server.pem
-    #SSLCertificateKeyFile /var/secrets/http-server.privkey
-    #SSLCertificateChainFile /var/secrets/incommon-interm.pem
+    SSLEngine on
 
     ServerName _ALIAS_._EXTBASENAME_:_EXTPORT_
     RewriteEngine on
