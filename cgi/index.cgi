@@ -64,6 +64,7 @@ oops("Only GET method is supported") unless($ENV{'REQUEST_METHOD'} eq 'GET');
 
 # get the alias
 my $fullhost = $ENV{'HTTP_HOST'};
+$fullhost =~ s/\:\d+$//;
 my ($nonce,$remainderhost) = split(/\./, $fullhost, 2);
 
 # junk = default

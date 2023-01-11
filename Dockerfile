@@ -9,6 +9,7 @@ RUN  \
   \
   echo "Adding packages" && \
   apt-get install -y \ 
+    tini \
     apache2 \
     git \
     curl \
@@ -54,4 +55,5 @@ COPY cgi /var/www/satellite/cgi/
 COPY doc /var/www/satellite/doc/
 COPY etc /var/www/satellite/etc/
 COPY html /var/www/satellite/html/
-CMD ["exec", "/entrypoint"]
+COPY var /var/www/satellite/var/
+CMD ["exec", "/usr/bin/tini", "/entrypoint"]

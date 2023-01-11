@@ -1,10 +1,17 @@
 #!/bin/bash
 cd $(dirname $0)
 
+if [[ ! -f container-envs.conf ]]; then
+  echo "Missing $(pwd)/container-envs.conf" 1>&2
+  exit 1
+fi
+source container-envs.conf
+
 PERSIST_BASE_DIR=/home/ssakai/satthing-persistent
 BIND_DIRS=( \
   "${PERSIST_BASE_DIR}/logs" \
-  "${PERSIST_BASE_DIR}/secrets" )
+  "${PERSIST_BASE_DIR}/secrets" \
+  "${PERSIST_BASE_DIR}/secrets/satellite-state" )
 
 for B in "${BIND_DIRS[@]}"; do
   if [[ ! -d "${B}" ]]; then
@@ -25,7 +32,7 @@ for T in "${TLS_FILES[@]}"; do
     TLS_OOPS=1
   fi
 done
-if [[ "${TLS_OOPS}" ]];  then
+if [[ "${TLS_OOPS}" -ne 0 ]];  then
   echo "Missing critical files, no action taken." 1>&2
   exit 1
 fi  
@@ -50,15 +57,20 @@ podman create \
   --mount=type=tmpfs,tmpfs-size=100M,tmpfs-mode=0755,destination=/var/run \
   --mount=type=bind,src=${PERSIST_BASE_DIR}/logs,destination=/var/log \
   --mount=type=bind,src=${PERSIST_BASE_DIR}/secrets,destination=/var/secrets \
-  --env SAT_CONFIG_DBFILE=/var/secrets/state.sqlite \
+  --env SAT_CONFIG_DBFILE=/var/secrets/satellite-state/state.sqlite \
   --env SAT_CONFIG_HTTPDSTUBFILE=/var/secrets/proxyconf.conf \
+  --env SAT_CONFIG_TGTIPMASK \
+  --env SAT_CONFIG_JOBSTATEIPMASK \
+  --env SAT_CONFIG_TTL_SECS \
+  --env SAT_CONFIG_EXTPORT \
+  --env SAT_CONFIG_EXTBASENAME \
   --replace  \
   --shm-size=2g \
   --name=satthing \
   --hostname=satthing \
-  --publish=127.0.0.1:8081:80 \
+  --publish=0.0.0.0:9000:443 \
   --publish=0.0.0.0:2022:22 \
-  --entrypoint '["/bin/sleep", "1000"]' \
+  --entrypoint '["/usr/bin/tini", "/entrypoint"]' \
   satellite:latest 
 
 

@@ -20,6 +20,8 @@ if [[ ! -e "${DBFILE}" ]]; then
   sqlite3 "${DBFILE}" < "${SATDIR}/etc/schema-sqlite3.txt" 
   chown :www-data "${DBFILE}"
   chmod 660 "${DBFILE}"
+  chown :www-data $(dirname "${DBFILE}")
+  chmod 770 $(dirname "${DBFILE}")
 fi
 
 # make proxyconf.conf file if missing, otherwise cron job fails.
@@ -69,8 +71,10 @@ fi
 # no ecdsa key because this algorithm is fragile
 
 
-# SSL termination happens outside the container.
-service apache2 restart
+# don't invoke via service, since the
+#  SAT_CONFIG_* env vars will be missing.
+source /etc/apache2/envvars
+/usr/sbin/apache2 -k start
  
 service ssh restart
    
