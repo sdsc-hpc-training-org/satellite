@@ -22,6 +22,10 @@ if [[ ! -e "${DBFILE}" ]]; then
   chmod 660 "${DBFILE}"
 fi
 
+# make proxyconf.conf file if missing, otherwise cron job fails.
+if [[ ! -e /var/secrets/proxyconf.conf ]]; then
+  touch /var/secrets/proxyconf.conf
+fi
 # make the chroot directory for revssh if it doesn't exist
 REVSSHDIR=$( "${SATDIR}/bin/getconf" revssh_chroot_dir )
 if [[ ! -d "${REVSSHDIR}" ]]; then

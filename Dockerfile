@@ -1,13 +1,6 @@
 FROM debian:latest as os_with_packages
 ENV PYTHONUNBUFFERED 1
 RUN  \
-  echo "Adding users" && \
-  groupadd -g 56 ssl-cert && \
-  \
-  # for dehydrated/letsencrypt \
-  groupadd -g 200 certs && \
-  useradd -g certs -u 200 -M -s /bin/bash -d / certs && \
-  \
   echo "Fetching package lists" && \
   apt-get update && \
   \
@@ -50,11 +43,15 @@ RUN \
   a2enmod proxy_http && \
   a2enmod proxy_html && \
   a2enmod proxy_wstunnel && \
-  a2dismod ssl 
+  a2enmod ssl 
 COPY image-files/ /
 
 
 FROM all_configured AS satellite_added
 ENV PYTHONUNBUFFERED 1
-COPY bin cgi doc dynconf etc html httpd-conf logs var /var/www/satellite
+COPY bin /var/www/satellite/bin/
+COPY cgi /var/www/satellite/cgi/
+COPY doc /var/www/satellite/doc/
+COPY etc /var/www/satellite/etc/
+COPY html /var/www/satellite/html/
 CMD ["exec", "/entrypoint"]
