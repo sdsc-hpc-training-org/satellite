@@ -10,7 +10,9 @@ package satconfig;
 our $pidfile = '/var/run/httpd/httpd.pid';
 
 # location of the database file
-our $dbfile = defined $ENV{'SAT_CONFIG_DBFILE'} ? $ENV{'SAT_CONFIG_DBFILE'} : $basename . '/../var/state.sqlite';
+# our $dbfile = defined $ENV{'SAT_CONFIG_DBFILE'} ? $ENV{'SAT_CONFIG_DBFILE'} : $basename . '/../var/state.sqlite';
+# setting this via env is difficult since many services clean out their environment
+our $dbfile = '/var/secrets/satellite-state/state.sqlite';
 
 # allowed subnet for reverse-proxy targets
 # format: subnet/mask
@@ -39,7 +41,9 @@ our $listenport = defined $ENV{'SAT_CONFIG_LISTENPORT'} ? $ENV{'SAT_CONFIG_LISTE
 
 # the stub file for the apache config
 # it's dynamically updated by bin/cron script
-our $httpdstubfile = defined $ENV{'SAT_CONFIG_HTTPDSTUBFILE'} ? $ENV{'SAT_CONFIG_HTTPDSTUBFILE'} : $basename . '/../dynconf/proxyconf.conf';
+#our $httpdstubfile = defined $ENV{'SAT_CONFIG_HTTPDSTUBFILE'} ? $ENV{'SAT_CONFIG_HTTPDSTUBFILE'} : $basename . '/../dynconf/proxyconf.conf';
+# setting via env is difficult because many services clean out their environment.
+our $httpdstubfile = '/var/secrets/proxyconf.conf';
 
 # nice(r) message pages go here
 our $htmldir = $basename . '/../html';

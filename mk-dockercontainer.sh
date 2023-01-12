@@ -57,8 +57,6 @@ podman create \
   --mount=type=tmpfs,tmpfs-size=100M,tmpfs-mode=0755,destination=/var/run \
   --mount=type=bind,src=${PERSIST_BASE_DIR}/logs,destination=/var/log \
   --mount=type=bind,src=${PERSIST_BASE_DIR}/secrets,destination=/var/secrets \
-  --env SAT_CONFIG_DBFILE=/var/secrets/satellite-state/state.sqlite \
-  --env SAT_CONFIG_HTTPDSTUBFILE=/var/secrets/proxyconf.conf \
   --env SAT_CONFIG_TGTIPMASK \
   --env SAT_CONFIG_JOBSTATEIPMASK \
   --env SAT_CONFIG_TTL_SECS \
