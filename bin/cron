@@ -19,7 +19,7 @@ my $template = <<_VHOST_BODY_;
 <VirtualHost *:_LISTENPORT_>
     SSLEngine on
 
-    ServerName _ALIAS_._EXTBASENAME_:_EXTPORT_
+    ServerName _ALIAS_._EXTBASENAME_
     RewriteEngine on
     RewriteCond %{HTTP:Upgrade} websocket [NC]
     RewriteCond %{HTTP:Connection} upgrade [NC]
@@ -35,15 +35,23 @@ my $listenport = $satconfig::listenport;
 my $extport = $satconfig::extport;
 my $extbasename = $satconfig::extbasename;
 my $httpdstubfile = $satconfig::httpdstubfile;
+my $poolgroup = $satconfig::revssh_group;
 
-# get httpd's pid
-# use killall instead since httpdpid might contain junk
-#open(my $pidfileh, '<', $satconfig::pidfile) or die("Unable to read httpd pid file: $satconfig::pidfile: $!");
-#my $httpdpid = do { local $/; <$pidfileh> };
-#close($pidfileh);
-#chomp $httpdpid;
+# key = account name, val = 0 if not in use, 1 if in use
+# processes owned by a not-in-use account get killed.
+my %poolinuse;
 
-
+# populate the revssh account pool, all accounts are initially
+# not used.
+my @grent = getgrnam($poolgroup);
+if ( @grent )
+{
+    my @tpool = split('\s+', $grent[3]);
+    while ( my $acct = shift(@tpool) )
+    {
+        $poolinuse{$acct} = 0;
+    }
+}
 
 # connect to the db since that's the remainder of what we do.
 our $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
@@ -91,6 +99,11 @@ while (my @row = $sth->fetchrow)
           $satconfig::revssh_chroot_dir, $revssh_user);
         $wstarget = sprintf("unix://%s/%s/socket/tunnel|ws://localhost/",
           $satconfig::revssh_chroot_dir, $revssh_user);
+        # mark the account as in-use so we don't clean its processes
+        # check for existence first, because there might be junk in the db
+        # ... this gets passed to pkill
+        $poolinuse{$revssh_user} = 1 if ( defined $poolinuse{$revssh_user} );
+
     } else
     {
         $proxytarget = sprintf("http://%s:%d/", $dsthost, $dstport);
@@ -134,6 +147,46 @@ if ( lc($newbodyhash) ne lc($currentbodyhash) )
     open(my $ofh, ">", $httpdstubfile) or die("Can't write to $httpdstubfile: $!");
     print $ofh ($newbody);
     close($ofh);
-    system("sudo killall -USR1 httpd apache2 2>/dev/null");
+    
+    # trigger a graceful reload of httpd. 
+    # the pid file might contain junk, especially if we're in a container.
+    # use kill instead.
+    if ( $> != 0 )
+    {
+        system("sudo killall -USR1 httpd apache2 2>/dev/null");
+    }
+    else
+    {
+        system("killall -USR1 httpd apache2 2>/dev/null");
+    }
 }
 
+# if revssh_group isn't being used, there's nothing further to
+# do here.
+exit if ( scalar keys %poolinuse == 0 );
+
+# clean up processes owned by a not-used revssh account.
+# the naive approach of pkilling each not-used account is
+# horribly noisy, especially when sudo is involved.
+#
+# further, the size of poolinuse could be very large, so we can't
+# stick every account on a command line.
+#
+# this requires some more thought.
+
+# lets see which accounts are actually running something
+my @acctsrunning = split(/\n+/, `ps -g $poolgroup -o euser --no-headers | sort | uniq`);
+
+# build a list of accounts to pkill
+my @acctstokill = grep($poolinuse{$_}  == 0 , @acctsrunning);
+if ( scalar @acctstokill > 0 )
+{
+    my $acctstokillarg = join( ',', @acctstokill);
+    if ( $> != 0 )
+    {
+        system("sudo pkill -9 -u $acctstokillarg");
+    } else
+    {
+        system("pkill -9 -u $acctstokillarg");
+    }
+}

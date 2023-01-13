@@ -43,7 +43,7 @@ if [[ $? -ne 0 ]]; then
   echo "Creating some users in pool..."
   # add some users to it
   for I in $( seq -f '%04.0f' 1 200 ); do
-    useradd -G "${REVSSHGROUP}" -M -s /bin/false -d / "revssh${I}"
+    useradd -g "${REVSSHGROUP}" -G "${REVSSHGROUP}" -M -s /bin/false -d / "revssh${I}"
     mkdir -p "${REVSSHDIR}/revssh${I}/socket"
     chown "revssh${I}:root" "${REVSSHDIR}/revssh${I}/socket"
   done
