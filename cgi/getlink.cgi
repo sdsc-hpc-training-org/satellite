@@ -22,8 +22,19 @@ sub oops($)
 
 # stop and check remote IP here. Don't issue tokens to just anyone.
 my $srvip = $ENV{'REMOTE_ADDR'};
-my $ipf = new Net::IP($satconfig::tgtipmask);
-oops("Client (your) IP not in range $satconfig::tgtipmask, please try from within the cluster.") unless $ipf->overlaps(new Net::IP($srvip)) == $IP_B_IN_A_OVERLAP;
+my $ipmatch = 0;
+foreach my $ipmask ( split(/\s+/, $satconfig::tgtipmask) )
+{
+    my $ipf = new Net::IP($ipmask);
+    my $ipoverlap = $ipf->overlaps(new Net::IP($srvip));
+    if ( $ipoverlap == $IP_B_IN_A_OVERLAP || $ipoverlap == $IP_IDENTICAL )
+    {
+        $ipmatch = 1;
+        last;
+    }
+}
+oops("Client (your) IP not in ranges $satconfig::tgtipmask, please try from within the cluster.") unless ( $ipmatch == 1 );
+
 
 # database lives here
 # CREATE TABLE proxy ( alias text not null, alias_compare_hash text not null, modified timestamp default current_timestamp, dsthost text, dstport integer, dstpath text, state text not null);

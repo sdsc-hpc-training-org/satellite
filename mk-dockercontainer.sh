@@ -62,12 +62,14 @@ podman create \
   --env SAT_CONFIG_TTL_SECS \
   --env SAT_CONFIG_EXTPORT \
   --env SAT_CONFIG_EXTBASENAME \
+  --network ${NETWORK} \
+  --ip ${IP} \
+  --subuidname=ssakai \
+  --subgidname=ssakai \
   --replace  \
   --shm-size=2g \
   --name=satthing \
   --hostname=satthing \
-  --publish=0.0.0.0:9000:443 \
-  --publish=0.0.0.0:2022:22 \
   --entrypoint '["/usr/bin/tini", "/entrypoint"]' \
   satellite:latest 
 

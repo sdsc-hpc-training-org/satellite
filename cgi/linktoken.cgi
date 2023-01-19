@@ -46,12 +46,20 @@ $jobid =~ s/[^-a-zA-Z0-9._]//g;
 # jobid shouldn't be TOO long, else syslog message gets truncated.
 oops("Missing 'jobid' parameter") unless $jobid && $jobid ne '' && length $jobid < 48;
 
-
 # check server's IP to make sure we allow it
-# we don't want just anyone to link a bunch of jobids.
 my $srvip = $ENV{'REMOTE_ADDR'};
-my $ipf = new Net::IP($satconfig::tgtipmask);
-oops("Client (your) IP not in range $satconfig::tgtipmask, please try from within the cluster.") unless $ipf->overlaps(new Net::IP($srvip)) == $IP_B_IN_A_OVERLAP;
+my $ipmatch = 0;
+foreach my $ipmask ( split(/\s+/, $satconfig::tgtipmask) )
+{
+    my $ipf = new Net::IP($ipmask);
+    my $ipoverlap = $ipf->overlaps(new Net::IP($srvip));
+    if ( $ipoverlap == $IP_B_IN_A_OVERLAP || $ipoverlap == $IP_IDENTICAL )
+    {
+        $ipmatch = 1;
+        last;
+    }
+}
+oops("Client (your) IP not in ranges $satconfig::tgtipmask, please try from within the cluster.") unless ( $ipmatch == 1 );
 
 # great, update the database.
 # remember not to match on the nonce directly.
