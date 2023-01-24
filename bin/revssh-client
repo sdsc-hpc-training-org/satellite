@@ -1,0 +1,71 @@
+#!/bin/bash 
+# example revssh client
+
+# stop on nonzero exit
+set -e
+
+# temp dir contains a temp ssh key
+function cleanup
+{
+    if [[ ${IDDIR+1} && -d "${IDDIR}" ]]; then
+      rm -f "${IDDIR}/privkey" "${IDDIR}/username" "${IDDIR}/redeem"
+      rmdir "${IDDIR}"
+    fi
+}
+
+# show some help
+function usage
+{
+    echo "Usage: $0 <satellite base domain> <token> <app listening port>" 1>&2
+    echo "   -or-  " 1>&2
+    echo "Usage: $0 <satellite base domain> <identity directory from previous redemption> <app listening port>" 1>&2
+    cleanup
+    exit
+}
+
+# see if we need to show some help
+if [[ "${#@}" -ne 3 ]]; then
+  usage
+fi
+
+# since we're laying down an ssh key, be very restrictive so
+# it's not accidentally world-readable
+umask 0077
+
+BASEDOM="${1}"
+TOKEN="${2}"
+PORT="${3}"
+
+RESUME=0
+
+# this might be an attempt to reconnect after redeeming the token and getting
+# disconnected for whatever reason.
+if [[ -d "${TOKEN}" && -f "${TOKEN}/privkey" && -f "${TOKEN}/username" ]]; then
+  IDDIR="${TOKEN}"
+  RESUME=1
+else
+  IDDIR=$( mktemp -d /dev/shm/revssh-client.XXXXXX )
+fi
+
+cd "${IDDIR}"
+
+if [[ "${RESUME}" -eq 0 ]]; then
+  # try to redeem the token
+  curl --silent "https://manage.${BASEDOM}/redeemtoken.cgi?token=${TOKEN}&revssh=1" > redeem
+  if [[ $( grep -c '^Success' redeem ) -ne 1 ]]; then
+    echo "Failed to redeem token. Message below..." 1>&2
+    cat redeem 1>&2
+    cd ..
+    cleanup
+    exit 1
+  fi
+
+  # still here? let's get the username and key
+  head -2 redeem | tail -1 > username
+  tail -n +3 redeem > privkey
+fi
+
+# establish the ssh tunnel
+ssh -i privkey "$(cat username)@${BASEDOM}" -o StrictHostKeyChecking=accept-new -N -R "/socket/tunnel:localhost:${PORT}" &
+
+printf "SSH client PID is %d\nRemove when done: %s\n" "$!" "${IDDIR}"

@@ -7,7 +7,7 @@ if [[ ! -f container-envs.conf ]]; then
 fi
 source container-envs.conf
 
-PERSIST_BASE_DIR=/home/ssakai/satthing-persistent
+PERSIST_BASE_DIR=/var/persistent/satthing-persistent
 BIND_DIRS=( \
   "${PERSIST_BASE_DIR}/logs" \
   "${PERSIST_BASE_DIR}/secrets" \

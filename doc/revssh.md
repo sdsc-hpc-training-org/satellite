@@ -5,6 +5,66 @@ Some environments that would otherwise be appropriate for Satellite lack technic
 
 This capability leverages the reverse-tunnel feature of SSH to bridge those restrictions, so long as the application is able to reach the Satellite server's SSH daemon.
 
+# Implementation (discussion is further down)
+## Client Usage
+1) Obtain a token.
+```
+login-node:~$ curl https://manage.example.com/getlink.cgi
+Your token is 
+obscurity-morally-avenue
+login-node:~$
+```
+2) Stash token in secure place, submit job to batch queue.
+   1) Token is also the proxy url `(token).example.com` to load in user's browser.
+3) Job scheduled to run on batch node and starts.
+4) Job redeems token using revssh-client.
+   1) Args are `base url` `token` and `listening_port_of_job's_service`
+```
+batch-node:~$ ./revssh-client example.com obscurity-morally-avenue 1234
+SSH client PID is 22583
+Remove when done: /dev/shm/revssh-client.7az5Jn
+batch-node:~$
+```
+The above example would result in https requests hitting `https://obscurity-morally-avenue.example.com` being tunneled to a http service listening on `batch-node:1234` or preferably, the `batch-node's` `localhost:1234`.
+
+### Client Usage: Resuming an Interrupted Connection
+1) The directory cited in the `Remove when done:` line contains the necessary information to reconnect. Hopefully the caller saved the directory.
+2) Invoke `revssh-client` with this directory as the token.
+```
+batch-node:~$ ./revssh-client example.com /dev/shm/revssh-client.7az5Jn 1234
+SSH client PID is 22583
+Remove when done: /dev/shm/revssh-client.7az5Jn
+batch-node:~$
+```
+
+## Server Usage
+(under development)
+Requires:
+* Container host with 1-2 cores for Satellite, 1G persistent storage.
+* Podman (can use Docker, edit at your own risk!)
+* Dedicated external IP - This container will bind to :443/tcp and :22/tcp to use standard, non-controversial ports for client communication. e.g. `10.0.0.23`.
+* Wildcard DNS pointing at above IP - e.g. `foo.example.com A 10.0.0.23` `*.foo.example.com CNAME foo.example.com.`
+* TLS/SSL certificate signed by CA/Browser Forum trusted CA, for above DNS entry - e.g. CN=`foo.example.com` , SAN:`*.foo.example.com`.
+* `/etc/subuid` and `/etc/subgid` map entry for Satellite container. e.g. `satellite:100000:65536`
+
+1) Clone repo.
+2) Create persistent storage directory on container host filesystem.
+3) Review and edit `container-envs.conf`.
+4) Review and edit `html/*`.
+5) Review and edit `mk-dockerimage.sh` to determine where it expects to find its required files/directories, Podman network name, and subuid/subgid map name.
+   1) Default persistent dir: `/var/persistent/satthing-persistent`
+   2) TLS Cert in: `$PERSIST_BASE_DIR/secrets/http-server.{pem|privkey|chain}`
+6) Create image by running `mk-dockerimage.sh`.
+7) Create container by running `mk-dockercontainer.sh`.
+8) Start container.
+
+Note that the `container-envs.conf` file sets environment variables, which are in turn set in the container.  When changing most of these, it is only necessary to rebuild the container, not the entire image.
+
+## Server Maintenance
+* Patch the container by re-creating the image, then re-creating the container.  Re-creating the container **WILL** stop the currently-running one.
+* Satellite stores its secrets and dynamic configuration in the persistent storage.  Restarting/replacing the container should not require users to regenerate their tokens, however their jobs will need to have scripting to reconnect the reverse-ssh tunnel.
+
+
 # Theory of Operation
 ## High-Level
 * The application runs a small shell script (*revssh client*) that will SSH to the Satellite server and use `ssh -R ...` to create a reverse tunnel.

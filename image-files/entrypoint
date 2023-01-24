@@ -40,14 +40,21 @@ getent group "${REVSSHGROUP}"
 if [[ $? -ne 0 ]]; then
   echo "Creating missing group: ${REVSSHGROUP}"
   groupadd "${REVSSHGROUP}"  
-  echo "Creating some users in pool..."
-  # add some users to it
-  for I in $( seq -f '%04.0f' 1 200 ); do
+fi
+
+echo "Creating some users in pool..."
+for I in $( seq -f '%04.0f' 1 200 ); do
+  # make the revssh users if they're missing
+  getent passwd revssh${I} > /dev/null
+  if [[ $? -ne 0 ]]; then
     useradd -g "${REVSSHGROUP}" -G "${REVSSHGROUP}" -M -s /bin/false -d / "revssh${I}"
+  fi
+  # make their chroot directory if they're missing
+  if [[ ! -d "${REVSSHDIR}/revssh${I}/socket" ]]; then
     mkdir -p "${REVSSHDIR}/revssh${I}/socket"
     chown "revssh${I}:root" "${REVSSHDIR}/revssh${I}/socket"
-  done
-fi
+  fi
+done
 
 mkdir /run/sshd
 
