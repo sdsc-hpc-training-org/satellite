@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="static/satellite.css" rel="stylesheet" type="text/css" />
+  <link href="static/css-circular-prog-bar.css" media="all" rel="stylesheet" />
+  <script src="static/satellite.js"></script>
+</head>
+<body>
+  <h1>Satellite Reverse Proxy Service</h1>
+  <h2>SDSC Example</h2>
+
+  <!-- show when the next update will happen -->
+  <div class="progress-circle p0" id="timerWheel">
+    <div class="left-half-clipper">
+      <div class="first50-bar"></div>
+      <div class="value-bar"></div>
+    </div>
+  </div>
+
+  <div>
+    <h3 style="display: inline;">Job State:</h3>
+    <p id="jobStateText" style="display: inline;">Unknown</p>
+  </div>
+
+  <!-- progress list -->
+  <div class="proglist-wrap">
+    <ul class="proglist" id="stepList">
+      <li>In Queue</li>
+      <li>Running</li>
+      <li>Mapped</li>
+      <li>Proxied</li>
+    </ul>
+  </div>
+
+  <!-- description of steps -->
+  <p>
+    <dl class="progdesc">
+      <dt>In Queue</dt>
+      <dd>Job has not yet started.</dd>
+
+      <dt>Running</dt>
+      <dd>Job has started, but has not redeemed Satellite Token.</dd>
+  
+      <dt>Mapped</dt>
+      <dd>Job has redeemed Satellite Token, but no proxy entry exists yet.</dd>
+
+      <dt>Proxied</dt>
+      <dd>Proxy entry created, ready to go!</dd>
+
+      <dt>Dead</dt>
+      <dd>Job died or exited, no further progress will occur.</dd>
+    </dl>
+</body>
+
+</html>

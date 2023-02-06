@@ -78,6 +78,16 @@ fi
 # no ecdsa key because this algorithm is fragile
 
 
+# set up a firewall
+# prevent inbound connections just in case someone sets up a local listener
+# note that their session is chrooted, so we just need to worry about tcp...
+iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -p tcp --destination-port 22 -j ACCEPT
+iptables -A INPUT -p tcp --destination-port 80 -j ACCEPT
+iptables -A INPUT -p tcp --destination-port 443 -j ACCEPT
+iptables -A INPUT -p tcp -j REJECT --reject-with tcp-reset
+
 # don't invoke via service, since the
 #  SAT_CONFIG_* env vars will be missing.
 source /etc/apache2/envvars

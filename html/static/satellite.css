@@ -1,0 +1,117 @@
+
+.proglist-wrap
+{
+    width: 75%;
+    padding-top: 10px;
+    padding-bottom: 5px;
+    height: 90px;
+}
+
+.proglist
+{
+    margin: auto;
+    display: flex;
+    width: 95%;
+}
+.proglist li
+{
+    list-style-type: none;
+    width: 23%;
+    float: left;
+    font-size: 1em;
+    position: relative;
+    text-align: center;
+    color: #7d7d7d;
+}
+
+.proglist li:before
+{
+    width: 50px;
+    height: 50px;
+    content: "";
+    line-height: 50px;
+    border: 2px solid #7d7d7d;
+    display: block;
+    text-align: center;
+    margin: 0 auto 3px auto;
+    border-radius: 90%;
+    position: relative;
+    z-index: 2;
+    background-color: #fff;
+}
+
+.proglist li:after
+{
+    width: 100%;
+    height: 2px;
+    content: '';
+    position: absolute;
+    background-color: #7d7d7d;
+    top: 30px;
+    left: -50%;
+    z-index: 0;
+}
+
+.proglist li:first-child:after
+{
+    content: none;
+}
+
+.proglist li.dead:before
+{
+    background-color: #fff;
+    border-radius: 0%;
+    color: #f00;
+    font-size: 45px;
+    content: '\2620';
+
+}
+
+.proglist li.active 
+{
+    color: green;
+    font-weight: bold;
+}
+
+
+.proglist li.active:before
+{
+    border-color: #55b775;
+    background: green;
+}
+
+.proglist li.active + li:after
+{
+    background-color: #55b775;
+}
+
+p
+{
+    clear: both;
+}
+
+
+dl
+{
+    border: 1px solid black;
+    width: 75%;
+    margin-left: 10%;
+    padding: 1em;
+}
+
+body
+{
+    font-family: sans-serif;
+}
+
+dt
+{
+    color: blue;
+    font-style: bold;
+}
+
+dd
+{
+    padding-bottom: 0.5em;
+}
+

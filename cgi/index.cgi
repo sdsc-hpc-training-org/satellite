@@ -45,7 +45,7 @@ sub pending_message
   #print "Please make a GET request from the host running the service to proxy.\n";
   #print "\nExample: curl 'https://manage.comet-user-content.sdsc.edu/redeemtoken.cgi?token=<token>&port=<service_port>'\n";
   print "Content-type: text/html\n\n";
-  print `cat $satconfig::htmldir/pending.html`;
+  print `cat $satconfig::htmldir/js-index.html`;
   exit;
 }
 
@@ -55,7 +55,7 @@ sub mapping_message
   #print "This token is mapped but waiting on an internal process.\n";
   #print "Please be patient. This will take a couple of minutes!\n";
   print "Content-type: text/html\n\n";
-  print `cat $satconfig::htmldir/mapping.html`;
+  print `cat $satconfig::htmldir/js-index.html`;
   exit;
 }
 
